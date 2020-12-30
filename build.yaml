@@ -1,0 +1,19 @@
+targets:
+  $default:
+    builders:
+      # Typically the builder key is just the package name, run
+      # to check your config:
+      # flutter pub run build_runner doctor
+      dart_generator_test|codeBuilder:
+        generate_for:
+          - lib/models/*.dart
+
+# Read about `build.yaml` at https://pub.dev/packages/build_config
+builders:
+
+  dart_generator_test|codeBuilder:
+    import: "package:dart_generator_test/builders.dart"
+    builder_factories: [ "codeBuilder" ]
+    build_extensions: { '.dart': ['.g.dart'] }
+    build_to: source
+    auto_apply: root_package
