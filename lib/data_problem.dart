@@ -3,6 +3,15 @@ import 'package:meta/meta.dart';
 
 import 'models/messageContent.g.dart' as generated;
 
+//  a print utility
+void _printHistory(List history) {
+  print('history:');
+  var i = 0;
+  for (var e in history) {
+    print('   ${i++}: $e');
+  }
+}
+
 ///   Run the sample situations to highlight the use of immutable classes
 ///
 void main(List<String> arguments) {
@@ -71,7 +80,7 @@ void main(List<String> arguments) {
     bob.luckyNumber = 7;
     history.add(bob);
     print('bob: $bob');
-    print('history: $history');
+    _printHistory(history);
     print('//  all lucky numbers are now 7!  this is true since there is only one instance!');
   } catch (e) {
     print(e);
@@ -91,7 +100,7 @@ void main(List<String> arguments) {
     bob.luckyNumber = 7;
     history.add(bob.copy());
     print('bob: $bob');
-    print('history: $history');
+    _printHistory(history);
     print('//  history is now correct.  the history list has an instance for each entry, based on convention');
 
     print('');
@@ -100,11 +109,11 @@ void main(List<String> arguments) {
     bob.luckyNumber = 3;
     print('bob: $bob');
     history.add(bob); //  should be a copy
-    print('history: $history');
+    _printHistory(history);
     bob.luckyNumber = 123456;
     print('bob: $bob');
     history.add(bob);
-    print('history: $history');
+    _printHistory(history);
     print('//  history is not always correct.  the history list accuracy depends on developer discipline');
   } catch (e) {
     print(e);
@@ -124,7 +133,7 @@ void main(List<String> arguments) {
     bob.luckyNumber = 7;
     history.add(bob.immutable());
     print('bob: $bob');
-    print('history: $history');
+    _printHistory(history);
     print('//  history is now correct.  the history list has an instance for each entry enforced by the type system');
   } catch (e) {
     print(e);
@@ -146,7 +155,7 @@ void main(List<String> arguments) {
     bob.luckyNumber = 7; //  notice that the immutable is not nulled
     history.add(bob.immutable()); //  the immutable was re-used.
     print('bob: $bob');
-    print('history: $history');
+    _printHistory(history);
     print('//  history is now correct.  the history list has an instance for each entry enforced by the type system');
     print('//  the immutable instance is only created when required');
     print('//  note the tonnage of boilerplate required!');
@@ -271,6 +280,9 @@ void main(List<String> arguments) {
     print('');
     print('speaking of compound values, let\'s try the generated code:');
     var bob = generated.Person('bob', 13, generated.Color(0, 0, 255));
+    var history = <generated.ImmutablePerson>[]; //  an empty list
+    //compile error: history.add(bob); //error: The argument type 'Person' can't be assigned to the parameter type 'ImmutablePerson'. (argument_type_not_assignable at [dart_generator_test] lib/data_problem.dart:275)
+    history.add(bob.immutable());
 
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -294,13 +306,19 @@ void main(List<String> arguments) {
       //  if (favoriteColor != null)  //  can never be null
       {
         favoriteColor.red = 255;
+        history.add(bob.immutable());
         favoriteColor.green = 255;
+        history.add(bob.immutable());
       }
-      print('immutableBob favoriteColor: ${immutableBob.favoriteColor}');
+      print('bob favoriteColor: ${bob.favoriteColor}');
     }
-    print('bob: $bob');
+    bob.luckyNumber = 123456;
+    history.add(bob.immutable());
+
     print('bob.immutable() (a new immutable copy): ${bob.immutable()}');
     print('immutableBob  (the old immutable copy): $immutableBob');
+    _printHistory(history);
+    print('bob: $bob');
     print('now immutable values are immutable, mutable values are mutable');
     print('boilerplate written by the generator, hidden from the developer');
   }
@@ -435,7 +453,8 @@ class AlmostImmutablePerson {
   String toString() {
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber'
         //  return string of favorite color if it's not null
-        '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}';
+        '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}'
+        '}';
   }
 }
 
@@ -454,7 +473,8 @@ class SimpleAlmostMutablePerson {
   @override
   String toString() {
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber}'
-        '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}';
+        '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}'
+        '}';
   }
 }
 

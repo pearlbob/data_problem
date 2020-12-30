@@ -14,6 +14,7 @@ class CodeBuilder implements Builder {
     '.dart': ['.g.dart']
   };
 
+  /// generate the boilerplate code for the given input class data structure
   @override
   Future build(BuildStep buildStep) async {
     // Get the `LibraryElement` for the primary input.
@@ -43,6 +44,7 @@ $sb
 ''');
   }
 
+  //  a bit of dart stream magic
   Iterable<Element> allElements(LibraryElement element) sync* {
     for (var cu in element.units) {
       yield* cu.functionTypeAliases;
@@ -53,6 +55,7 @@ $sb
     }
   }
 
+  //  generate the code for the immutable version of the data structure
   String _generateImmutableClass(LibraryElement entryLib, Element e) {
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
@@ -60,18 +63,20 @@ $sb
 /// generated Immutable class for for the given ${e.name} class
 class Immutable${e.name} {
   Immutable${e.name}(''');
+    //  list all fields in the constructor
     var first = true;
     for (var fe in fields) {
       if (first) {
         first = false;
       } else {
-        sb.write(',');
+        sb.write(', ');
       }
-      sb.write(' this.${fe.name}');
+      sb.write('this.${fe.name}');
     }
     sb.writeln(');');
     sb.writeln();
 
+    //  declare all the fields in the generated class
     for (var fe in fields) {
       var type = fe.type;
       var isImmutable = _isImmutable(fe);
@@ -80,6 +85,7 @@ class Immutable${e.name} {
           '${type.getDisplayString(withNullability: false)} ${fe.name};');
     }
 
+    //  generate a toString() function for convenience
     sb.write('''
  
   @override
@@ -101,31 +107,40 @@ class Immutable${e.name} {
     return sb.toString();
   }
 
+  //  generate the code for the mutable version of the data structure
+  //  capable of generating the immutable version
   String _generateMutableClass(LibraryElement entryLib, Element e) {
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
+
+    //  generate class and its constructor
     sb.write('''
 /// generated MutableReady class for for the given ${e.name} class
 class ${e.name} implements MutableReady<Immutable${e.name}> {
   ${e.name}(''');
+
+    //  list all the fields in the constructor
     var first = true;
     for (var fe in fields) {
       if (first) {
         first = false;
       } else {
-        sb.write(',');
+        sb.write(', ');
       }
-      sb.write(' this.${fe.name}');
+      sb.write('this.${fe.name}');
     }
     sb.writeln(');');
     sb.writeln();
 
+    //  declare all the fields in the generated class
     for (var fe in fields) {
       var type = fe.type;
       sb.writeln('  '
           '${type.getDisplayString(withNullability: false)} ${fe.name};');
     }
 
+    //  adhere to the MutableReady interface by implementing the immutable()
+    //  method.
     sb.write('''
 
   /// generate an Immutable class for the given ${e.name} when asked
@@ -151,6 +166,8 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   ''');
 
     //  todo: implement equals, hashcode, compareTo<>
+
+    //  generate a toString() function for convenience
     sb.write('''
  
   @override
@@ -172,7 +189,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     return sb.toString();
   }
 
-  /// is the given field element immutable?
+  /// test if the given field element is immutable
   bool _isImmutable(FieldElement fe) {
     var type = fe.type;
     return // try to find one of the known language immutables
