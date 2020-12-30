@@ -70,6 +70,8 @@ doc/api/
 *.js.deps
 *.js.map
 
+#   dart generated files
+*.g.dart
 
 .gradle
 gradle/
