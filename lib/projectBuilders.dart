@@ -98,6 +98,7 @@ class Immutable${e.name} {
       } else {
         sb.write(',');
       }
+      //  there are no accessors available but the final values are fine to use
       sb.write(' ${fe.name}: \$${fe.name}');
     }
     sb.writeln(''' }\';
@@ -254,7 +255,9 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       } else {
         sb.write(',');
       }
-      sb.write(' ${fe.name}: \$${fe.name}');
+      //  note: use private values!  not the accessors
+      //  otherwise you will null the immutable copy unintentionally
+      sb.write(' ${fe.name}: \$_${fe.name}');
     }
     sb.writeln(''' }\';
   }

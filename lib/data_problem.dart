@@ -26,6 +26,9 @@ void main(List<String> arguments) {
   print('   methods and fields are public unless the name begins with an underscore.');
   print('   this code is written using the new null-safety compiler.');
   print('     if you see odd uses of ?, ??, or !, ask me');
+  print('   dart can infer the data type of local variables so the use of "var" is encouraged');
+  print('   single quotes and double quotes delineate strings');
+  print('   variables are public except when the name stars with an underscore');
   print('');
 
   try {
@@ -134,7 +137,7 @@ void main(List<String> arguments) {
 
     print('');
     print('human error can still get things wrong');
-    // history = <PersonWithCopy>[]; //  empty the list
+    //  add more bob history
     bob.luckyNumber = 3;
     print('bob: $bob');
     history.add(bob); //  should be a copy!
@@ -155,8 +158,8 @@ void main(List<String> arguments) {
     var history = <AlmostImmutablePerson>[]; //  an empty list
     var bob = SimpleAlmostMutablePerson('bob', 13);
     //  compile error:
-    //  history.add(bob); //  error: The argument type 'SimpleMutablePerson'
-    //  can't be assigned to the parameter type 'ImmutablePerson'.
+    //  history.add(bob); //  error: The argument type 'SimpleAlmostMutablePerson'
+    //  can't be assigned to the parameter type 'AlmostImmutablePerson'.
     history.add(bob.immutable());
     print('bob: $bob');
     bob.luckyNumber = 7;
@@ -170,13 +173,13 @@ void main(List<String> arguments) {
 
   try {
     print('');
-    //  a thousand history entries will generate a thousand ImmutablePerson copies for each of its records.
-    //  we need to be more effective with our use of memory.
+    print('a thousand history entries will generate a thousand ImmutablePerson copies for each of its records.');
+    print('we need to be more effective with our use of memory.');
     var history = <AlmostImmutablePerson>[];
     var bob = EffectiveMutablePerson('bob', 13);
     //  compile error:
-    //  history.add(bob); //  error: The argument type 'SimpleMutablePerson'
-    //  can't be assigned to the parameter type 'ImmutablePerson'.
+    //  history.add(bob); //  error: The argument type 'EffectiveMutablePerson'
+    //  can't be assigned to the parameter type 'AlmostImmutablePerson'.
     history.add(bob.immutable());
     print('bob: $bob');
     bob.luckyNumber = 7;
@@ -230,12 +233,13 @@ void main(List<String> arguments) {
     {
       var favoriteColor = immutableBob.favoriteColor;
       if (favoriteColor != null) {
-        favoriteColor.red = 255;    //  this is bad
+        favoriteColor.red = 255; //  this is bad
         favoriteColor.green = 255;
       }
     }
     print('immutableBob: $immutableBob');
     print('lesson: all referenced types need to know that they are immutable!');
+    print('String and int are immutable classes so we didn\'t have this problem with them');
   }
 
   {
@@ -274,20 +278,25 @@ void main(List<String> arguments) {
     print('now immutable values are immutable, mutable values are mutable... almost');
     print('...with a ton of nearly unreadable and unmaintainable boilerplate.');
 
-    print('...but mutable values can be fooled with when referenced from external references');
+    print('Worst of all...');
+    print('... mutable values can be fooled with when referenced');
     bob.favoriteColor = MutableColor(0, 0, 255);
     var history = <ImmutablePerson>[];
     history.add(bob.immutable());
+
+
     {
-      var favoriteColor = bob.favoriteColor;  //  immutable cleared here
+      //  don't single step here, calling the accessor fools the algorithm
+      //  when accessed by the debugger!!
+      var favoriteColor = bob.favoriteColor; //  immutable cleared here
       if (favoriteColor != null) {
         favoriteColor.red = 255;
-        history.add(bob.immutable());         //  immutable was set to purple
+        history.add(bob.immutable()); //  immutable was set to purple
         favoriteColor.green = 255;
-        history.add(bob.immutable());         //  immutable was not cleared here!
+        history.add(bob.immutable()); //  immutable was not cleared here!
       }
     }
-    bob.luckyNumber = 123456;       //  the update of another value wakes up the color to the green change
+    bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
     history.add(bob.immutable());
     _printHistory(history);
     print('note that history[2] doesn\'t have the green value it should.');
@@ -338,7 +347,7 @@ void main(List<String> arguments) {
       {
         favoriteColor.red = 255;
         history.add(bob.immutable());
-        favoriteColor.green = 255;    //  immutable color is monitored by this update
+        favoriteColor.green = 255; //  mutable ready color has monitored this update
         history.add(bob.immutable());
       }
       print('bob favoriteColor: ${bob.favoriteColor}');
@@ -354,6 +363,7 @@ void main(List<String> arguments) {
     print('external references are accounted for');
     print('copies are kept to a minimum');
     print('the boilerplate written by the generator, hidden from the developer');
+    print('');
   }
 
   {
@@ -362,11 +372,15 @@ void main(List<String> arguments) {
     print('data hidden in class structures are not truly searchable: ');
     print(database_declarations);
     print(database_use);
+    print('');
   }
+
+  print('Questions?');
 }
 
 /// let everyone have access to the member values
 class PersonWithPublicValues {
+  //  constructor args with the "this." prefix initializes the field value
   PersonWithPublicValues(this.name, this.luckyNumber);
 
   String name;
@@ -374,6 +388,7 @@ class PersonWithPublicValues {
 
   @override
   String toString() {
+    //  dollar signs in strings are parsed for variable value substitution
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
   }
 }
@@ -384,11 +399,11 @@ class PersonWithGetters {
   PersonWithGetters(this._name, this._luckyNumber);
 
   //  a public accessor for a private value
+  //  dart style makes it look like a field reference, but it's a method call
   //  String theName = instance.name;
   String get name => _name;
 
-  //  a public accessor for a private value... java style
-  //  String theName = instance.getName();
+  //  a public accessor for a private value... java/C++ style
   String getName() {
     return _name;
   }
@@ -711,8 +726,8 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
 
   @override
   String toString() {
-    return '$runtimeType{name: $name, luckyNumber: $luckyNumber}'
-        '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}';
+    return '$runtimeType{name: $_name, luckyNumber: $_luckyNumber}'
+        '${_favoriteColor == null ? '' : ', favoriteColor: $_favoriteColor'}';
   }
 }
 
