@@ -632,10 +632,15 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
 
   @override
   ImmutablePerson immutable() {
-    return _immutablePerson //  reuse an accurate immutable value
-        ??
-        //  generate a new immutable and save it for possible subsequent use
-        (_immutablePerson = ImmutablePerson(name, luckyNumber, favoriteColor: favoriteColor?.immutable()));
+    if ( _immutablePerson == null
+        || !identical(_last_favoriteColor, _favoriteColor?.immutable())
+    )
+    {
+      _last_favoriteColor = _favoriteColor?.immutable();
+      //  generate a new immutable and save it for possible subsequent use
+      _immutablePerson = ImmutablePerson( name, luckyNumber, favoriteColor: _last_favoriteColor);
+    }
+    return _immutablePerson!;
   }
 
   set name(String value) {
@@ -645,7 +650,6 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
     _name = value;
     _immutablePerson = null; //  invalidate any existing immutable value
   }
-
   String get name => _name;
   String _name;
 
@@ -656,7 +660,6 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
     _luckyNumber = value;
     _immutablePerson = null;
   }
-
   int get luckyNumber => _luckyNumber;
   int _luckyNumber;
 
@@ -667,17 +670,25 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
     _favoriteColor = value;
     _immutablePerson = null;
   }
-
   MutableColor? get favoriteColor {
     //  since we're giving a reference to a mutable value
-    //  our local immutable copy may not stay valid
+    //  our local immutable copy may not stay valid!
+    //
+    //  note: this almost works.
+    //  if a reference is acquired and an immutable copy is made,
+    //  subsequent alterations using that reference will not be monitored.
+    //
+    //  var c = bob.favoriteColor;  //  get a reference from the getter
+    //  history.add(bob.immutable); //  validate the immutable version
+    //  c.red = 128;                //  modify the color
+    //  history.add(bob.immutable); //  the _immutablePerson will still be considered valid!
     _immutablePerson = null;
     return _favoriteColor;
   }
-
   MutableColor? _favoriteColor;
 
   ImmutablePerson? _immutablePerson;
+  ImmutableColor? _last_favoriteColor;
 
   @override
   String toString() {

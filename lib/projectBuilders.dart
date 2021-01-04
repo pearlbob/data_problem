@@ -60,7 +60,7 @@ $sb
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
     sb.write('''
-/// generated Immutable class for for the given ${e.name} class
+/// generated Immutable class for the ${e.name} class model
 class Immutable${e.name} {
   Immutable${e.name}(''');
     //  list all fields in the constructor
@@ -113,9 +113,16 @@ class Immutable${e.name} {
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
 
+    var mutableFields = <FieldElement>[];
+    for (var fe in fields) {
+      if (!_isImmutable(fe)) {
+        mutableFields.add(fe);
+      }
+    }
+
     //  generate class and its constructor
     sb.write('''
-/// generated MutableReady class for for the given ${e.name} class
+/// generated MutableReady class for the ${e.name} class model
 class ${e.name} implements MutableReady<Immutable${e.name}> {
   ${e.name}(''');
 
@@ -151,65 +158,92 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  adhere to the MutableReady interface by implementing the immutable()
     //  method.
     sb.writeln('''
-  Immutable${e.name}? _immutable${e.name};
+  Immutable${e.name}? _immutable${e.name};  //  last immutable copy made.
   ''');
-    for (var fe in fields) {
-      if (!_isImmutable(fe)) {
-        sb.writeln(
-            '  Immutable${fe.type.getDisplayString(withNullability: false)}? _last_${fe.name};');
-      }
+     if (mutableFields.isNotEmpty ){
+       sb.writeln('  // storage to monitor MutableReady fields');
+     }
+    for (var fe in mutableFields) {
+      sb.writeln('  Immutable${fe.type.getDisplayString(withNullability: false)}? _lastImmutable_${fe.name};');
     }
     sb.write('''
 
   /// generate an Immutable class for the given ${e.name} when asked
   @override
   Immutable${e.name} immutable() {
-    if ( _immutable${e.name} == null
-    ''');
-    for (var fe in fields) {
-      if (!_isImmutable(fe)) {
-        //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln(
-            '    || !identical(_last_${fe.name}, ${fe.name}.immutable())');
-      }
-    }
-    sb.write('''      )
-      {
 ''');
-    for (var fe in fields) {
-      if (!_isImmutable(fe)) {
-        //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('      _last_${fe.name} = ${fe.name}.immutable();');
-      }
-    }
-    sb.write('''
-      _immutable${e.name} = Immutable${e.name}(''');
-    first = true;
-    for (var fe in fields) {
-      if (first) {
-        first = false;
-      } else {
-        sb.write(',');
-      }
+    if (mutableFields.isEmpty) {
+      sb.write('''
+      return _immutable${e.name}
+        ??
+        (_immutable${e.name} = Immutable${e.name}(''');
+      first = true;
+      for (var fe in fields) {
+        if (first) {
+          first = false;
+        } else {
+          sb.write(',');
+        }
 
-      if (!_isImmutable(fe)) {
-        //  member has to be immutable or an implementation of MutableReady!
-        sb.write(' _last_${fe.name}!');
-      } else {
-        sb.write(' ${fe.name}');
+        if (!_isImmutable(fe)) {
+          //  member has to be immutable or an implementation of MutableReady!
+          sb.write(' _lastImmutable_${fe.name}!');
+        } else {
+          sb.write(' ${fe.name}');
+        }
       }
-    }
-    sb.writeln(');');
-    sb.writeln('''      }
+      sb.writeln('));');
+      sb.writeln('  }');
+    } else {
+      //  mutableFields.isNotEmpty
+      sb.write('''
+    if ( _immutable${e.name} == null
+        //  test if the MutableReady fields have been changed
+        //  note that the immutable() calls either are required for the result below
+        //  or are inexpensive, especially the second time.
+    ''');
+      for (var fe in mutableFields) {
+        //  member has to be immutable or an implementation of MutableReady!
+        sb.writeln('    || !identical(_lastImmutable_${fe.name}, _${fe.name}.immutable())');
+      }
+      sb.write('''      )
+      {   
+''');
+      for (var fe in mutableFields) {
+        //  member has to be immutable or an implementation of MutableReady!
+        sb.writeln('      _lastImmutable_${fe.name} = _${fe.name}.immutable();');
+      }
+      sb.write('''
+      _immutable${e.name} = Immutable${e.name}(''');
+      first = true;
+      for (var fe in fields) {
+        if (first) {
+          first = false;
+        } else {
+          sb.write(',');
+        }
+
+        if (!_isImmutable(fe)) {
+          //  member has to be immutable or an implementation of MutableReady!
+          sb.write(' _lastImmutable_${fe.name}!');
+        } else {
+          sb.write(' ${fe.name}');
+        }
+      }
+      sb.writeln(');');
+      sb.writeln('''      }
     return _immutable${e.name}!;
   }
   ''');
+    }
 
     //  todo: implement equals, hashcode, compareTo<>
+    //  todo: deal with nullable fields
+    //  todo: copy comments
+    //  todo: copy class methods, const values, static methods, etc.
 
     //  generate a toString() function for convenience
     sb.write('''
- 
   @override
   String toString() {
     return '\$runtimeType{''');
