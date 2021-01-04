@@ -35,7 +35,7 @@ class CodeBuilder implements Builder {
 
     await buildStep.writeAsString(info, '''
 //  generated code
-//  do not change by hand
+//  do not change by hand!
 import '../mutableReady.dart';
 
 // Input ID: ${buildStep.inputId}
@@ -234,7 +234,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       sb.writeln('''      }
     return _immutable${e.name}!;
   }
-  ''');
+''');
     }
 
     //  todo: implement equals, hashcode, compareTo<>
