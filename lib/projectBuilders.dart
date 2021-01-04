@@ -127,7 +127,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       } else {
         sb.write(', ');
       }
-      sb.write('this.${fe.name}');
+      sb.write('this._${fe.name}');
     }
     sb.writeln(');');
     sb.writeln();
@@ -135,18 +135,55 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  declare all the fields in the generated class
     for (var fe in fields) {
       var type = fe.type;
-      sb.writeln('  '
-          '${type.getDisplayString(withNullability: false)} ${fe.name};');
+      sb.writeln('''
+  ${type.getDisplayString(withNullability: false)} _${fe.name};
+  ${type.getDisplayString(withNullability: false)} get ${fe.name} => _${fe.name};
+  set ${fe.name}(${type.getDisplayString(withNullability: false)} value) {
+    if (_${fe.name} == value) {
+      return;
+    }
+    _${fe.name} = value;
+    _immutable${e.name} = null;
+  }
+''');
     }
 
     //  adhere to the MutableReady interface by implementing the immutable()
     //  method.
+    sb.writeln('''
+  Immutable${e.name}? _immutable${e.name};
+  ''');
+    for (var fe in fields) {
+      if (!_isImmutable(fe)) {
+        sb.writeln(
+            '  Immutable${fe.type.getDisplayString(withNullability: false)}? _last_${fe.name};');
+      }
+    }
     sb.write('''
 
   /// generate an Immutable class for the given ${e.name} when asked
   @override
   Immutable${e.name} immutable() {
-    return( Immutable${e.name}(''');
+    if ( _immutable${e.name} == null
+    ''');
+    for (var fe in fields) {
+      if (!_isImmutable(fe)) {
+        //  member has to be immutable or an implementation of MutableReady!
+        sb.writeln(
+            '    || !identical(_last_${fe.name}, ${fe.name}.immutable())');
+      }
+    }
+    sb.write('''      )
+      {
+''');
+    for (var fe in fields) {
+      if (!_isImmutable(fe)) {
+        //  member has to be immutable or an implementation of MutableReady!
+        sb.writeln('      _last_${fe.name} = ${fe.name}.immutable();');
+      }
+    }
+    sb.write('''
+      _immutable${e.name} = Immutable${e.name}(''');
     first = true;
     for (var fe in fields) {
       if (first) {
@@ -154,14 +191,17 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       } else {
         sb.write(',');
       }
-      sb.write(' ${fe.name}');
+
       if (!_isImmutable(fe)) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.write('.immutable()');
+        sb.write(' _last_${fe.name}!');
+      } else {
+        sb.write(' ${fe.name}');
       }
     }
-    sb.writeln('));');
-    sb.writeln('''
+    sb.writeln(');');
+    sb.writeln('''      }
+    return _immutable${e.name}!;
   }
   ''');
 

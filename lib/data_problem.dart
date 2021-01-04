@@ -73,6 +73,23 @@ void main(List<String> arguments) {
   try {
     print('');
     //  one instance implies only one instance!
+    var history = <int>[]; //  an empty list
+    var luckyNumber =  13;
+    history.add(luckyNumber);
+    print('luckyNumber: $luckyNumber');
+    luckyNumber = 7;
+    history.add(luckyNumber);
+    print('luckyNumber: $luckyNumber');
+    _printHistory(history);
+    print('//  as expected');
+    print('//  note: in dart, numbers are immutable.');
+  } catch (e) {
+    print(e);
+  }
+
+  try {
+    print('');
+    //  one instance implies only one instance!
     var history = <PersonWithGettersAndSetters>[]; //  an empty list
     var bob = PersonWithGettersAndSetters('bob', 13);
     history.add(bob);
@@ -81,7 +98,8 @@ void main(List<String> arguments) {
     history.add(bob);
     print('bob: $bob');
     _printHistory(history);
-    print('//  all lucky numbers are now 7!  this is true since there is only one instance!');
+    print('//  all lucky numbers are now 7!  this is true since there is only one "bob" instance!');
+    print('//  note: in dart, user declared classes are mutable.');
   } catch (e) {
     print(e);
   }
@@ -303,6 +321,7 @@ void main(List<String> arguments) {
     {
       //Color? favoriteColor = immutableBob.favoriteColor;  //  A value of type 'ImmutableColor?' can't be assigned to a variable of type 'Color?'.
       var favoriteColor = bob.favoriteColor;
+
       //  if (favoriteColor != null)  //  can never be null
       {
         favoriteColor.red = 255;
