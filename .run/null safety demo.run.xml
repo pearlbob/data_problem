@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="null safety demo" type="DartCommandLineRunConfigurationType" factoryName="Dart Command Line Application">
+    <option name="arguments" value="firstArg secondArg 42" />
+    <option name="filePath" value="$PROJECT_DIR$/lib/null_safety_examples.dart" />
+    <method v="2" />
+  </configuration>
+</component>

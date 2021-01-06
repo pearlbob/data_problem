@@ -18,18 +18,20 @@ void _printHistory(List history) {
 void main(List<String> arguments) {
   // ignore: omit_local_variable_types
 
-  print('');
-  print('a few dart notes:');
-  print('   all Strings, numbers and boolean values in dart are immutable objects.');
-  print('   final variables are not re-assignable.');
-  print('   the "new" reserved word is optional on constructor invocation');
-  print('   methods and fields are public unless the name begins with an underscore.');
-  print('   this code is written using the new null-safety compiler.');
-  print('     if you see odd uses of ?, ??, or !, ask me');
-  print('   dart can infer the data type of local variables so the use of "var" is encouraged');
-  print('   single quotes and double quotes delineate strings');
-  print('   variables are public except when the name stars with an underscore');
-  print('');
+  print('''
+a few dart notes:
+   all Strings, numbers and boolean values in dart are immutable objects.
+      typically it's only strings.
+   final variables are not re-assignable.
+   the "new" reserved word is optional on constructor invocation
+   methods and fields are public unless the name begins with an underscore.
+   this code is written using the new null-safety compiler.
+     if you see odd uses of ?, ??, or !, ask me
+   dart can infer the data type of local variables so the use of "var" is encouraged
+   variables are public except when the name stars with an underscore
+   single quotes and double quotes delineate strings
+   three single quotes make a multi-line string.
+''');
 
   try {
     // let everyone have access to the member values
@@ -87,7 +89,7 @@ void main(List<String> arguments) {
   try {
     print('');
     //  one instance implies only one instance!
-    var history = <int>[]; //  an empty list
+    var history = <int>[]; //  an empty list of int
     var luckyNumber = 13;
     history.add(luckyNumber);
     print('luckyNumber: $luckyNumber');
@@ -109,6 +111,8 @@ void main(List<String> arguments) {
     history.add(bob);
     print('bob: $bob');
     bob.luckyNumber = 7;
+    //  dart numbers are references to immutable class instances!
+    //  so this does not modify the existing memory reference.
     history.add(bob);
     print('bob: $bob');
     _printHistory(history);
@@ -127,8 +131,6 @@ void main(List<String> arguments) {
     var bob = PersonWithCopy('bob', 13);
     history.add(bob.copy());
     print('bob: $bob');
-    //  dart numbers are references to immutable class instances!
-    //  so this does not modify existing memory reference.
     bob.luckyNumber = 7;
     history.add(bob.copy());
     print('bob: $bob');
@@ -146,7 +148,10 @@ void main(List<String> arguments) {
     print('bob: $bob');
     history.add(bob);
     _printHistory(history);
-    print('//  history is not always correct.  the history list accuracy depends on developer discipline');
+    print('''
+//  history is not always correct.  the history list accuracy depends on developer discipline
+//  these errors are hard to find.
+''');
   } catch (e) {
     print(e);
   }
@@ -283,18 +288,12 @@ void main(List<String> arguments) {
     bob.favoriteColor = MutableColor(0, 0, 255);
     var history = <ImmutablePerson>[];
     history.add(bob.immutable());
-
-
-    {
-      //  don't single step here, calling the accessor fools the algorithm
-      //  when accessed by the debugger!!
-      var favoriteColor = bob.favoriteColor; //  immutable cleared here
-      if (favoriteColor != null) {
-        favoriteColor.red = 255;
-        history.add(bob.immutable()); //  immutable was set to purple
-        favoriteColor.green = 255;
-        history.add(bob.immutable()); //  immutable was not cleared here!
-      }
+    var favoriteColor = bob.favoriteColor; //  immutable cleared here
+    if (favoriteColor != null) {
+      favoriteColor.red = 255;
+      history.add(bob.immutable()); //  immutable value was set to purple
+      favoriteColor.green = 255;    //  immutable was not cleared here!  so the immutable value is still purple
+      history.add(bob.immutable());
     }
     bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
     history.add(bob.immutable());
@@ -360,15 +359,16 @@ void main(List<String> arguments) {
     _printHistory(history);
     print('note that history[2] now has the green value it should.');
     print('now immutable values are immutable, mutable values are mutable');
-    print('external references are accounted for');
+    print('changes from external references are accounted for');
     print('copies are kept to a minimum');
     print('the boilerplate written by the generator, hidden from the developer');
+    print('immutable objects act as expected.');
     print('');
   }
 
   {
     print('');
-    print('bonus: a pet peeve: ');
+    print('bonus material: a pet peeve: ');
     print('data hidden in class structures are not truly searchable: ');
     print(database_declarations);
     print(database_use);
@@ -438,6 +438,7 @@ class PersonWithFinalValues {
 }
 
 /// read or write through getters and setters
+/// typical dart style
 /// too much boilerplate!
 class PersonWithGettersAndSetters {
   PersonWithGettersAndSetters(this._name, this._luckyNumber);
@@ -548,9 +549,11 @@ class EffectiveMutablePerson {
   }
 
   set name(String value) {
+    //  does the set result in a change of value?
     if (_name == value) {
-      return;
+      return; //  no, do nothing
     }
+    //  yes.  apply the change and forget any old immutable copy
     _name = value;
     _immutablePerson = null; //  invalidate any existing immutable value
   }
