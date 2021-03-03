@@ -55,14 +55,17 @@ $sb
     }
   }
 
-  //  generate the code for the immutable version of the data structure
+  ///  generate the code for the immutable version of the data structure
   String _generateImmutableClass(LibraryElement entryLib, Element e) {
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
+
+    //  declare class and default constructor
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
 class Immutable${e.name} {
   Immutable${e.name}(''');
+
     //  list all fields in the constructor
     var first = true;
     for (var fe in fields) {
@@ -114,6 +117,7 @@ class Immutable${e.name} {
     var fields = entryLib.getType(e.name).fields;
     var sb = StringBuffer();
 
+    //  find all the mutable classes referenced
     var mutableFields = <FieldElement>[];
     for (var fe in fields) {
       if (!_isImmutable(fe)) {
@@ -161,6 +165,8 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     sb.writeln('''
   Immutable${e.name}? _immutable${e.name};  //  last immutable copy made.
   ''');
+
+    //  provide references to immutable versions of mutable class references
      if (mutableFields.isNotEmpty ){
        sb.writeln('  // storage to monitor MutableReady fields');
      }
@@ -174,6 +180,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   Immutable${e.name} immutable() {
 ''');
     if (mutableFields.isEmpty) {
+      //  mutableFields.isEmpty     create a simplified version of immutable()
       sb.write('''
       return _immutable${e.name}
         ??
@@ -224,6 +231,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
           sb.write(',');
         }
 
+        //  provide the default constructor the correct argument list
         if (!_isImmutable(fe)) {
           //  member has to be immutable or an implementation of MutableReady!
           sb.write(' _lastImmutable_${fe.name}!');

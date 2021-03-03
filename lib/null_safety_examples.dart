@@ -15,6 +15,8 @@ void main(List<String> arguments) {
 class NullSafetyExamples {
   void main(List<String> nonNullArguments) //  a non-null list of non-null values
   {
+    //  as you might expect, with no extra stuff going on (i.e. no null testing)
+
     print('main( $nonNullArguments ):');
     //  no test for null required
     if (nonNullArguments.isNotEmpty) {
@@ -30,6 +32,8 @@ class NullSafetyExamples {
 
   void anotherMain(List<String?>? nullableArguments) //  a nullable list of nullable values
   {
+    //  forced to test for null before every first access
+
     //error: nullableArguments.isNotEmpty;   error: An expression whose value can be 'null' must be null-checked before it can be dereferenced.
     print('');
     print('anotherMain( $nullableArguments ):');
@@ -60,7 +64,7 @@ class NullSafetyExamples {
 
     try {
       var myNumber = canBeNull;
-      //  the type of myNumber is int? and is non-nullable
+      //  the type of myNumber is int? and is nullable
       print(
           'myNumber: ${myNumber.runtimeType}: $myNumber    //  things often work out naturally if you don\'t force them');
     } catch (e) {
@@ -74,39 +78,43 @@ class NullSafetyExamples {
       //  the type of myNumber is int... and is non-nullable
       print('myNumber: $myNumber');
     } catch (e) {
-      print('thrown: $e'); //  oops!
+      print('thrown: $e'); //  oops!  what would you expect?
     }
 
     var myNumber2 = canBeNull ?? 0; //  a default, non-nullable value covers a possible run time null failure
+    //  the type of myNumber2 is int. it's non-nullable, i.e. null safe
     print('myNumber: ${myNumber2.runtimeType}: $myNumber2     //  as expected');
 
-    NullSafetyExamples? myNullableExample; //  will be null here
-
-    print('myNullableExample: ${myNullableExample.runtimeType}: $myNullableExample'); //  prints null
-
-    //  protect against indirection on a null reference
     {
-      var myValue = myNullableExample?.canBeNull //  indirection on null pointer will not happen but will return null
-              ??
-              0 //  default value covers possible run time failure
-          ;
-      print('myValue: ${myValue.runtimeType}: $myValue     //  possible error avoided');
-    }
-    {
-      var myValue = NullSafetyExamples();
+      NullSafetyExamples? myNullableExample; //  will be null here
 
-      // myValue =  myNullableExample;
-      //  error: A value of type 'NullSafetyExamples?' can't be assigned to a variable of type 'NullSafetyExamples'.
+      print('myNullableExample: ${myNullableExample.runtimeType}: $myNullableExample'); //  prints Null: null
 
-      print('myValue: ${myValue.runtimeType}: $myValue     //  possible error avoided');
-    }
+      //  protect against indirection on a null reference
+      {
+        var myValue = myNullableExample?.canBeNull //  indirection on null pointer will not happen but will return null
+                ??
+                0 //  default value covers possible run time failure
+            ;
+        //  the type of myValue is int. it's non-nullable, i.e. null safe
+        print('myValue: ${myValue.runtimeType}: $myValue     //  possible error avoided');
+      }
+      {
+        var myValue = NullSafetyExamples();
 
-    //  testing for null will be understood... most of the time by looking a program flow
-    if (myNullableExample != null) {
-      //  compiler knows myExample will not be null here based on program flow
-      //  the ? will not be required
-      var myValue = myNullableExample.neverNull;
-      print('myValue: $myValue');
+        // myValue =  myNullableExample;
+        //  error: A value of type 'NullSafetyExamples?' can't be assigned to a variable of type 'NullSafetyExamples'.
+
+        print('myValue: ${myValue.runtimeType}: $myValue     //  possible error avoided');
+      }
+
+      //  testing for null will be understood... most of the time by looking a program flow
+      if (myNullableExample != null) {
+        //  compiler knows myExample will not be null here based on program flow
+        //  the ? will not be required
+        var myValue = myNullableExample.neverNull;
+        print('myValue: $myValue');
+      }
     }
   }
 
@@ -140,11 +148,12 @@ class NullSafetyExamples {
   {
     print('constructor called');
 
-    //  omission invokes a runtime error
+    //  omission of these invokes a runtime error
     aLateValue = 123;
     aLateFinalValue = 12345678;
   }
 
+  //  in dart, alternate constructors are named
   NullSafetyExamples.alternateConstructor(
       //  non-null constructor argument value will be assigned to the member field
       this.initializedByConstructor,
@@ -173,13 +182,15 @@ class NullSafetyExamples {
         ' aLateValue: $aLateValue, aLateFinalValue: $aLateFinalValue}';
   }
 
-  int neverNull = 0; //  has to be initialized!
-  int? canBeNull; //  initialization is optional
-  int initializedByConstructor;
+  int neverNull = 0; //  non-null value is initialized at construction, can change at any time
+  int? canBeNull; //  a nullable value, initialization is optional, will be null if not initialized
+  int initializedByConstructor; //  has to be initialized to a non-null value by every constructor
 
-  final int initializedFinal = 4; //  value cannot change
+  final int initializedFinal = 4; //  non-null value cannot change
   final int anotherInitializedFinal; //  value cannot change outside of constructor initialization
 
-  late int aLateValue; //  developer is responsible for initializing this in the constructor
+  final int initializedConst = 4; //  non-null value cannot change, must be valid at compile time
+
+  late int aLateValue; //  developer is responsible for initializing this before use
   late final int aLateFinalValue; //  developer is responsible for initializing this in the constructor
 }

@@ -3,7 +3,7 @@
 //  minimal input, largely data fields only
 //
 //  note:
-//  the assignments and the ? operator are only here to make the file null-safe
+//  the default assignments and the ? operator are only here to make the file null-safe
 
 /// a color class
 class Color {
