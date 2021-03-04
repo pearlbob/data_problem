@@ -1,7 +1,7 @@
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:meta/meta.dart';
 
-import 'models/messageContent.g.dart' as generated;
+import 'models/messageContent.g.dart';
 import 'mutableReady.dart';
 
 //  a print utility
@@ -106,25 +106,25 @@ void main(List<String> arguments) {
   try {
     print('');
     //  one instance implies only one instance!
-    var history = <PersonWithGettersAndSetters>[]; //  an empty list
-    var bob = PersonWithGettersAndSetters('bob', 13);
+    var history = <PersonWithPublicValues>[]; //  an empty list
+    var bob = PersonWithPublicValues('bob', 13);
     history.add(bob);
     print('bob: $bob');
     bob.luckyNumber = 7;
-    //  dart numbers are references to immutable class instances!
-    //  so this does not modify the existing memory reference.
     history.add(bob);
     print('bob: $bob');
     _printHistory(history);
-    print('//  all lucky numbers are now 7!  this is true since there is only one "bob" instance!');
-    print('//  note: in dart, user declared classes are mutable!');
+    print('//  the history list did not work as intended.');
+    print('//  all lucky numbers are now 7!  this is true since there is only one "bob" instance.');
+    print('//  note: in dart, user declared classes are mutable.');
+    print('');
   } catch (e) {
     print(e);
   }
 
   try {
     print('');
-    //  force the user to generate copies for the history's records.
+    print('ask the user to generate copies for the history records.');
     //  this will eventually be very memory intensive.
     //  this requires human discipline to enforce.
     var history = <PersonWithCopy>[]; //  an empty list
@@ -142,16 +142,18 @@ void main(List<String> arguments) {
     //  add more bob history
     bob.luckyNumber = 3;
     print('bob: $bob');
-    history.add(bob); //  should be a copy!
+    history.add(bob); //  this should be a copy!
     _printHistory(history);
     bob.luckyNumber = 123456;
     print('bob: $bob');
     history.add(bob);
     _printHistory(history);
     print('''
-//  history is not always correct.  the history list accuracy depends on developer discipline
-//  these errors are hard to find.
+//  history is not always correct.  entry #2 should have luckyNumber of 3
+//  the history list accuracy depends on developer discipline
+//  these errors are often hard to find.
 ''');
+    print('');
   } catch (e) {
     print(e);
   }
@@ -169,17 +171,24 @@ void main(List<String> arguments) {
     print('bob: $bob');
     bob.luckyNumber = 7;
     history.add(bob.immutable());
+    history.add(bob.immutable()); //  another history event
     print('bob: $bob');
     _printHistory(history);
-    print('//  history is now correct.  the history list has an instance for each entry enforced by the type system');
+    print('//  history is now correct.');
+    print('//  the history list has an instance for each entry enforced by the dart type system');
+    print('//  unfortunately it\'s not very memory efficient.');
+    print('identical(history[1], history[2]): ${identical(history[1], history[2])}');
+    print(
+        '//   thus a history of ten-thousand entries will generate ten-thousand ImmutablePerson copies for each of its records.');
+    print('//   we need to be more effective with our use of memory!');
+    print('');
   } catch (e) {
     print(e);
   }
 
   try {
     print('');
-    print('//   a thousand history entries will generate a thousand ImmutablePerson copies for each of its records.');
-    print('//   we need to be more effective with our use of memory.');
+
     var history = <AlmostImmutablePerson>[];
     var bob = EffectiveMutablePerson('bob', 13);
     //  compile error:
@@ -194,57 +203,67 @@ void main(List<String> arguments) {
     print('bob: $bob');
     _printHistory(history);
     print('//  history is now correct.  the history list shares an instance for adjacent identical values.');
+    print('identical(history[1], history[2]): ${identical(history[1], history[2])}');
     print('//  the immutable instance is only created when required');
     print('//  note the tonnage of hand written boilerplate required!');
+    print('');
   } catch (e) {
     print(e);
   }
 
-  {
-    print('');
-    print('//   an attempt at a generic solution:');
-    var immutableName = ImmutableWithGetter<String>('bob');
-    print('immutableName: $immutableName');
-
-    var name = MutableObject<String>('bob');
-    print('name: $name');
-    print('name.immutable(): ${name.immutable().runtimeType} ${name.immutable()}');
-    name.value = 'rodger';
-    print('name.value = \'rodger\' //  note that the ".value" is required');
-    print('name.immutable(): ${name.immutable().runtimeType} ${name.immutable()}');
-
-    print('');
-    print('//  unfortunately it doesn\'t work for compound values:');
-    var bob = MutableObject<PersonWithGettersAndSetters>(PersonWithGettersAndSetters('bob', 13));
-    print('bob: $bob');
-    print('bob.immutable(): ${bob.immutable().runtimeType} ${bob.immutable()}');
-
-    var immutableBob = bob.immutable();
-    print('immutableBob.immutable(): ${immutableBob.runtimeType} $immutableBob');
-    immutableBob.value?.luckyNumber = 123456;
-    print('immutableBob: $immutableBob');
-    print('the immutable lucky number was changed');
-  }
+  // {
+  //   print('');
+  print('//   an attempt at a solution using generics:');
+  //   var immutableName = ImmutableWithGetter<String>('bob');
+  //   print('immutableName: $immutableName');
+  //
+  //   var name = MutableObject<String>('bob');
+  //   print('name: $name');
+  //   print('name.immutable(): ${name.immutable().runtimeType} ${name.immutable()}');
+  //   name.value = 'rodger';
+  //   print('name.value = \'rodger\' //  note that the ".value" is required');
+  //   print('name.immutable(): ${name.immutable().runtimeType} ${name.immutable()}');
+  //
+  //   print('');
+  //   print('//  unfortunately it doesn\'t work for compound values:');
+  //   var bob = MutableObject<PersonWithGettersAndSetters>(PersonWithGettersAndSetters('bob', 13));
+  //   print('bob: $bob');
+  //   print('bob.immutable(): ${bob.immutable().runtimeType} ${bob.immutable()}');
+  //
+  //   var immutableBob = bob.immutable();
+  //   print('immutableBob.immutable(): ${immutableBob.runtimeType} $immutableBob');
+  //   immutableBob.value?.luckyNumber = 123456;
+  //   print('immutableBob: $immutableBob');
+  //   print('// the immutable lucky number was changed!');
+  print('//   doesn\'t really work in the general nested data structure case');
+  print('');
+  // }
 
   {
     print('');
     print('//   speaking of compound values:');
-    var bob = SimpleAlmostMutablePerson('bob', 13, favoriteColor: SampleColor(0, 0, 255));
+    var bob = EffectiveMutablePerson('bob', 13, favoriteColor: SampleColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
     //immutableBob.luckyNumber = 0;   //  compile error: There isn’t a setter named 'luckyNumber' in class 'ImmutablePerson'.
 
     //  write an immutable value... by working your way around the language protections
     {
-      var favoriteColor = immutableBob.favoriteColor;
+      final favoriteColor = immutableBob.favoriteColor;
+      //  note that the local variable favoriteColor is final!
+      //  only means that the reference can't be changed... but the value can!
       if (favoriteColor != null) {
-        favoriteColor.red = 255; //  this is bad
+        favoriteColor.red = 255;    //  this is bad, really bad
+        //  we're changing a value that we think is "final" because it's a final field
+        //  referenced by a final variable
         favoriteColor.green = 255;
       }
     }
     print('immutableBob: $immutableBob');
     print('//   lesson: all referenced types need to know that they are immutable!');
+    print('//   so they can defend themselves from change');
     print('//   String and int are immutable classes so we didn\'t have this problem with them');
+    print('');
   }
 
   {
@@ -268,40 +287,42 @@ void main(List<String> arguments) {
 
     //Color? favoriteColor = immutableBob.favoriteColor;  //  A value of type 'ImmutableColor?' can't be assigned to a variable of type 'Color?'.
 
-    //  update a mutable value by an external reference!!!
     {
+      //  now let's update a mutable value by an external reference!!!
       var favoriteColor = bob.favoriteColor;
       if (favoriteColor != null) {
-        favoriteColor.red = 255;  //  bob's favorite color has been changed behind his back!
+        favoriteColor.red = 255; //  bob's favorite color has been changed behind his back!
         favoriteColor.green = 255;
       }
     }
 
     print('bob: $bob');
     print('bob.immutable() (a new immutable copy): ${bob.immutable()}');
-    print('immutableBob  (the old immutable copy): $immutableBob');
     print('//   now immutable values are immutable, mutable values are mutable... almost');
     print('//   ...with a ton of nearly unreadable and unmaintainable boilerplate.');
+    print('');
 
     print('//   Worst of all...');
     print('//   ... mutable values can be fooled with when referenced externally');
     bob.favoriteColor = MutableColor(0, 0, 255);
-    var history = <ImmutablePerson>[];
-    history.add(bob.immutable());     //  [0]
+    var history = <NearlyImmutablePerson>[];
+    print('bob: $bob');
+    history.add(bob.immutable()); //  [0]
 
     //  let's fool around with bob's color, using an external reference
-    var favoriteColor = bob.favoriteColor; //  immutable cleared here
+    var favoriteColor = bob.favoriteColor; //  Person's immutable copy cleared here
     if (favoriteColor != null) {
       favoriteColor.red = 255;
       history.add(bob.immutable()); //  [1] immutable value was set to purple
-      favoriteColor.green = 255;    //  bob's immutable was not cleared here!  so the immutable value is still purple
+      favoriteColor.green = 255; //  bob's immutable was not cleared here!  so the immutable value is still purple
       history.add(bob.immutable()); //  [2]
     }
     bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
-    history.add(bob.immutable());   //  [3]
+    history.add(bob.immutable()); //  [3]
     _printHistory(history);
     print('//   note that history[2] doesn\'t have the green value it should.');
     print('//   the mutable didn\'t know the field reference it gave away was used later');
+    print('');
   }
 
   print('');
@@ -318,11 +339,11 @@ void main(List<String> arguments) {
 
   {
     print('');
-    print('//   let\'s try the generated code:');
-    var bob = generated.Person('bob', 13, generated.Color(0, 0, 255));
-    var history = <generated.ImmutablePerson>[]; //  an empty list
-    //compile error: history.add(bob); //error: The argument type 'Person' can't be assigned to the parameter type 'ImmutablePerson'. (argument_type_not_assignable at [dart_generator_test] lib/data_problem.dart:275)
-    history.add(bob.immutable());     //  [0]
+    print('//   let\'s try the generated code!');
+    var bob = Person('bob', 13, Color(0, 0, 255));
+    var history = <ImmutablePerson>[];
+    //compile error: history.add(bob); //error: The argument type 'Person' can't be assigned to the parameter type 'ImmutablePerson'.
+    history.add(bob.immutable()); //  [0]
 
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -347,13 +368,14 @@ void main(List<String> arguments) {
       //  if (favoriteColor != null)  //  can never be null
       {
         favoriteColor.red = 255;
-        history.add(bob.immutable());     //  [1]
+        history.add(bob.immutable()); //  [1]
         favoriteColor.green = 255; //  bob's mutable ready color has monitored this update
-        history.add(bob.immutable());     //  [2], that triggers a new immutable here
+        history.add(bob.immutable()); //  [2], that triggers a new immutable here
       }
       print('bob favoriteColor: ${bob.favoriteColor}');
     }
-    bob.luckyNumber = 123456;     //  [2]
+    bob.luckyNumber = 123456; //  [2]
+    history.add(bob.immutable());
     history.add(bob.immutable());
 
     print('bob.immutable() (a new immutable copy): ${bob.immutable()}');
@@ -362,7 +384,8 @@ void main(List<String> arguments) {
     print('//   note that history[2] now has the green value it should.');
     print('//   now immutable values are immutable, mutable values are mutable');
     print('//   changes from external references are accounted for');
-    print('//   copies are kept to a minimum');
+    print('//   copies are kept to a minimum:');
+    print('identical(history[3], history[4]): ${identical(history[3], history[4])}');
     print('//   the boilerplate written by the generator, hidden from the developer');
     print('//   immutable objects act as expected.');
     print('');
@@ -371,7 +394,8 @@ void main(List<String> arguments) {
   {
     print('');
     print('//   bonus material: a pet peeve: ');
-    print('//   data hidden in class structures are not truly searchable: ');
+    print('//   philosophical observation: data hidden in class structures should be searchable');
+    print('//   at least in a debug environment');
     print(database_declarations);
     print(database_use);
     print('');
@@ -467,7 +491,8 @@ class PersonWithGettersAndSetters {
 class PersonWithCopy {
   PersonWithCopy(this.name, this.luckyNumber);
 
-  PersonWithCopy copy() {
+  PersonWithCopy copy() //  should be called clone?
+  {
     return PersonWithCopy(name, luckyNumber);
   }
 
@@ -501,19 +526,16 @@ class SampleColor {
 // it enforces all fields need to be final
 // but does not prevent their modification from other references.
 class AlmostImmutablePerson {
-  const AlmostImmutablePerson(this.name, this.luckyNumber, //
-      {SampleColor? favoriteColor} // optional named argument in dart
-      )
+  const AlmostImmutablePerson(this.name, this.luckyNumber, {SampleColor? favoriteColor})
       : favoriteColor = favoriteColor;
 
   final String name;
   final int luckyNumber;
-  final SampleColor? favoriteColor; //  the ? means it can be null
+  final SampleColor? favoriteColor;
 
   @override
   String toString() {
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber'
-        //  return string of favorite color if it's not null
         '${favoriteColor == null ? '' : ', favoriteColor: $favoriteColor'}'
         '}';
   }
@@ -542,14 +564,18 @@ class SimpleAlmostMutablePerson {
 
 /// a mutable version of Person that only generates a new immutable when required (i.e. lazy eval).
 class EffectiveMutablePerson {
-  EffectiveMutablePerson(this._name, this._luckyNumber);
+  EffectiveMutablePerson(this._name, this._luckyNumber, {SampleColor? favoriteColor}) : _favoriteColor = favoriteColor;
 
   AlmostImmutablePerson immutable() {
     return _immutablePerson //  reuse an accurate immutable value
         ?? //  if the value above was null, do the following:
         //  generate a new immutable and save it for possible subsequent use
-        (_immutablePerson = AlmostImmutablePerson(name, luckyNumber));
+        (_immutablePerson = AlmostImmutablePerson(name, luckyNumber, favoriteColor: _favoriteColor));
   }
+
+  String _name;
+
+  String get name => _name;
 
   set name(String value) {
     //  does the set result in a change of value?
@@ -561,8 +587,9 @@ class EffectiveMutablePerson {
     _immutablePerson = null; //  invalidate any existing immutable value
   }
 
-  String get name => _name;
-  String _name;
+  int _luckyNumber;
+
+  int get luckyNumber => _luckyNumber;
 
   set luckyNumber(int value) {
     if (_luckyNumber == value) {
@@ -572,14 +599,25 @@ class EffectiveMutablePerson {
     _immutablePerson = null;
   }
 
-  int get luckyNumber => _luckyNumber;
-  int _luckyNumber;
+  SampleColor? _favoriteColor;
+
+  SampleColor? get favoriteColor => _favoriteColor;
+
+  set favoriteColor(SampleColor? value) {
+    if (_favoriteColor == value) {
+      return;
+    }
+    _favoriteColor = value;
+    _immutablePerson = null;
+  }
 
   AlmostImmutablePerson? _immutablePerson; //  lazy eval immutable version, will be null initially
 
   @override
   String toString() {
-    return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
+    return '$runtimeType{name: $name, luckyNumber: $luckyNumber'
+        '${_favoriteColor == null ? '' : ', favoriteColor: $_favoriteColor'}'
+        '}';
   }
 }
 
@@ -652,8 +690,8 @@ class MutableColor implements MutableReady<ImmutableColor> {
 /// an immutable version of Person
 /// just like AlmostImmutablePerson but with an immutable favorite color.
 @immutable
-class ImmutablePerson {
-  const ImmutablePerson(this.name, this.luckyNumber, {ImmutableColor? favoriteColor}) : favoriteColor = favoriteColor;
+class NearlyImmutablePerson {
+  const NearlyImmutablePerson(this.name, this.luckyNumber, {ImmutableColor? favoriteColor}) : favoriteColor = favoriteColor;
 
   final String name;
   final int luckyNumber;
@@ -667,13 +705,13 @@ class ImmutablePerson {
 }
 
 /// an mutable version of Person
-class MutablePerson implements MutableReady<ImmutablePerson> {
+class MutablePerson implements MutableReady<NearlyImmutablePerson> {
   MutablePerson(this._name, this._luckyNumber, {MutableColor? favoriteColor}) // optional named argument in dart
       : _favoriteColor = favoriteColor;
 
   @override
-  ImmutablePerson immutable() {
-    _immutablePerson ??= ImmutablePerson(name, luckyNumber, favoriteColor: _favoriteColor?.immutable());
+  NearlyImmutablePerson immutable() {
+    _immutablePerson ??= NearlyImmutablePerson(name, luckyNumber, favoriteColor: _favoriteColor?.immutable());
     return _immutablePerson!;
   }
 
@@ -712,7 +750,7 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
   }
 
   MutableColor? get favoriteColor {
-    //  since we're giving a reference to a mutable value
+    //  since we're giving away a reference to a mutable value
     //  our local immutable copy may not stay valid!
     //
     //  note: this almost works.
@@ -728,7 +766,7 @@ class MutablePerson implements MutableReady<ImmutablePerson> {
   }
 
   //  immutable value for optimization
-  ImmutablePerson? _immutablePerson;
+  NearlyImmutablePerson? _immutablePerson;
 
   @override
   String toString() {

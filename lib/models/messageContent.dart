@@ -1,21 +1,20 @@
-
-
 //  minimal input, largely data fields only
 //
-//  note:
-//  the default assignments and the ? operator are only here to make the file null-safe
 
 /// a color class
 class Color {
-  int red = 0;
-  int green = 0;
-  int blue = 0;
-}
+  Color(this.red, this.green, this.blue);  //  the default constructors are only here to make the file null-safe
 
+  int red;
+  int green;
+  int blue;
+}
 
 //  a person
 class Person {
-  String? name;
-  int luckyNumber = 0;
+  Person(this.name, this.luckyNumber, {this.favoriteColor});
+
+  String name;
+  int luckyNumber;
   Color? favoriteColor;
 }

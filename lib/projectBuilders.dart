@@ -68,24 +68,24 @@ class Immutable${e.name} {
 
     //  list all fields in the constructor
     var first = true;
-    for (var fe in fields) {
+    for (var field in fields) {
       if (first) {
         first = false;
       } else {
         sb.write(', ');
       }
-      sb.write('this.${fe.name}');
+      sb.write('this.${field.name}');
     }
     sb.writeln(');');
     sb.writeln();
 
     //  declare all the fields in the generated class
-    for (var fe in fields) {
-      var type = fe.type;
-      var isImmutable = _isImmutable(fe);
+    for (var field in fields) {
+      var type = field.type;
+      var isImmutable = _isImmutable(field);
       sb.writeln('  final '
           '${isImmutable ? '' : 'Immutable'}'
-          '${type.getDisplayString(withNullability: false)} ${fe.name};');
+          '${type.getDisplayString(withNullability: false)} ${field.name};');
     }
 
     //  generate a toString() function for convenience
@@ -95,14 +95,14 @@ class Immutable${e.name} {
   String toString() {
     return '\$runtimeType{''');
     first = true;
-    for (var fe in fields) {
+    for (var field in fields) {
       if (first) {
         first = false;
       } else {
         sb.write(',');
       }
       //  there are no accessors available but the final values are fine to use
-      sb.write(' ${fe.name}: \$${fe.name}');
+      sb.write(' ${field.name}: \$${field.name}');
     }
     sb.writeln(''' }\';
   }
@@ -119,9 +119,9 @@ class Immutable${e.name} {
 
     //  find all the mutable classes referenced
     var mutableFields = <FieldElement>[];
-    for (var fe in fields) {
-      if (!_isImmutable(fe)) {
-        mutableFields.add(fe);
+    for (var field in fields) {
+      if (!_isImmutable(field)) {
+        mutableFields.add(field);
       }
     }
 
@@ -133,28 +133,28 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
 
     //  list all the fields in the constructor
     var first = true;
-    for (var fe in fields) {
+    for (var field in fields) {
       if (first) {
         first = false;
       } else {
         sb.write(', ');
       }
-      sb.write('this._${fe.name}');
+      sb.write('this._${field.name}');
     }
     sb.writeln(');');
     sb.writeln();
 
     //  declare all the fields in the generated class
-    for (var fe in fields) {
-      var type = fe.type;
+    for (var field in fields) {
+      var type = field.type;
       sb.writeln('''
-  ${type.getDisplayString(withNullability: false)} _${fe.name};
-  ${type.getDisplayString(withNullability: false)} get ${fe.name} => _${fe.name};
-  set ${fe.name}(${type.getDisplayString(withNullability: false)} value) {
-    if (_${fe.name} == value) {
+  ${type.getDisplayString(withNullability: false)} _${field.name};
+  ${type.getDisplayString(withNullability: false)} get ${field.name} => _${field.name};
+  set ${field.name}(${type.getDisplayString(withNullability: false)} value) {
+    if (_${field.name} == value) {
       return;
     }
-    _${fe.name} = value;
+    _${field.name} = value;
     _immutable${e.name} = null;
   }
 ''');
@@ -170,8 +170,8 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
      if (mutableFields.isNotEmpty ){
        sb.writeln('  // storage to monitor MutableReady fields');
      }
-    for (var fe in mutableFields) {
-      sb.writeln('  Immutable${fe.type.getDisplayString(withNullability: false)}? _lastImmutable_${fe.name};');
+    for (var field in mutableFields) {
+      sb.writeln('  Immutable${field.type.getDisplayString(withNullability: false)}? _lastImmutable_${field.name};');
     }
     sb.write('''
 
@@ -186,18 +186,18 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
         ??
         (_immutable${e.name} = Immutable${e.name}(''');
       first = true;
-      for (var fe in fields) {
+      for (var field in fields) {
         if (first) {
           first = false;
         } else {
           sb.write(',');
         }
 
-        if (!_isImmutable(fe)) {
+        if (!_isImmutable(field)) {
           //  member has to be immutable or an implementation of MutableReady!
-          sb.write(' _lastImmutable_${fe.name}!');
+          sb.write(' _lastImmutable_${field.name}!');
         } else {
-          sb.write(' ${fe.name}');
+          sb.write(' ${field.name}');
         }
       }
       sb.writeln('));');
@@ -210,21 +210,21 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
         //  note that the immutable() calls either are required for the result below
         //  or are inexpensive, especially the second time.
     ''');
-      for (var fe in mutableFields) {
+      for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('    || !identical(_lastImmutable_${fe.name}, _${fe.name}.immutable())');
+        sb.writeln('    || !identical(_lastImmutable_${field.name}, _${field.name}.immutable())');
       }
       sb.write('''      )
       {   
 ''');
-      for (var fe in mutableFields) {
+      for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('      _lastImmutable_${fe.name} = _${fe.name}.immutable();');
+        sb.writeln('      _lastImmutable_${field.name} = _${field.name}.immutable();');
       }
       sb.write('''
       _immutable${e.name} = Immutable${e.name}(''');
       first = true;
-      for (var fe in fields) {
+      for (var field in fields) {
         if (first) {
           first = false;
         } else {
@@ -232,11 +232,11 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
         }
 
         //  provide the default constructor the correct argument list
-        if (!_isImmutable(fe)) {
+        if (!_isImmutable(field)) {
           //  member has to be immutable or an implementation of MutableReady!
-          sb.write(' _lastImmutable_${fe.name}!');
+          sb.write(' _lastImmutable_${field.name}!');
         } else {
-          sb.write(' ${fe.name}');
+          sb.write(' ${field.name}');
         }
       }
       sb.writeln(');');
@@ -257,7 +257,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   String toString() {
     return '\$runtimeType{''');
     first = true;
-    for (var fe in fields) {
+    for (var field in fields) {
       if (first) {
         first = false;
       } else {
@@ -265,7 +265,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       }
       //  note: use private values!  not the accessors
       //  otherwise you will null the immutable copy unintentionally
-      sb.write(' ${fe.name}: \$_${fe.name}');
+      sb.write(' ${field.name}: \$_${field.name}');
     }
     sb.writeln(''' }\';
   }
@@ -275,10 +275,10 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   }
 
   /// test if the given field element is immutable
-  bool _isImmutable(FieldElement fe) {
-    var type = fe.type;
+  bool _isImmutable(FieldElement field) {
+    var type = field.type;
     return // try to find one of the known language immutables
-        fe.isFinal ||
+        field.isFinal ||
             type.isDartCoreBool ||
             type.isDartCoreDouble ||
             type.isDartCoreInt ||
