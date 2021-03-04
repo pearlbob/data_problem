@@ -269,6 +269,8 @@ void main(List<String> arguments) {
   {
     print('');
     print('//   speaking of compound values, let\'s try again:');
+    print('//   What?!!!!  What can possibly wrong if we have final references to immutable fields?');
+    print('//   nested compound values can create a problem.');
     var bob = MutablePerson('bob', 13, favoriteColor: MutableColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -302,19 +304,20 @@ void main(List<String> arguments) {
     print('//   ...with a ton of nearly unreadable and unmaintainable boilerplate.');
     print('');
 
-    print('//   Worst of all...');
-    print('//   ... mutable values can be fooled with when referenced externally');
+    print('//   Hey, this is all fine.  What can possibly be wrong now?');
+    print('//   Yes it is a subtle bug, but it\'s dangerous since it\'s not obvious.');
     bob.favoriteColor = MutableColor(0, 0, 255);
     var history = <NearlyImmutablePerson>[];
     print('bob: $bob');
     history.add(bob.immutable()); //  [0]
 
     //  let's fool around with bob's color, using an external reference
+    print('//   Let\'s try fooling with a mutable field with an external reference... behind the back of the containing object!');
     var favoriteColor = bob.favoriteColor; //  Person's immutable copy cleared here
     if (favoriteColor != null) {
       favoriteColor.red = 255;
-      history.add(bob.immutable()); //  [1] immutable value was set to purple
-      favoriteColor.green = 255; //  bob's immutable was not cleared here!  so the immutable value is still purple
+      history.add(bob.immutable()); //  [1] bob's immutable value was set to purple
+      favoriteColor.green = 255; //  bob's immutable copy was not cleared here!  so bob's immutable value is still purple
       history.add(bob.immutable()); //  [2]
     }
     bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
@@ -331,7 +334,7 @@ void main(List<String> arguments) {
   print('//      constant values can only be constructed from values constant at compile time.');
   print('//      final values are not deeply, transitively immutable.');
   print('//      collection classes have their own immutability issues');
-  print('//      efficient immutable copies of graphs is also difficult');
+  print('//      efficient immutable copies of graphs is also difficult but can be efficient');
 
   print('');
   print('//   dart, and nearly all languages i know of, are not really ready for immutable copies.');
@@ -339,7 +342,8 @@ void main(List<String> arguments) {
 
   {
     print('');
-    print('//   let\'s try the generated code!');
+    print('//   let\'s try the real solution, the generated code.');
+    print('//   sleepers wakeup, this is the real solution:');
     var bob = Person('bob', 13, Color(0, 0, 255));
     var history = <ImmutablePerson>[];
     //compile error: history.add(bob); //error: The argument type 'Person' can't be assigned to the parameter type 'ImmutablePerson'.
@@ -392,6 +396,8 @@ void main(List<String> arguments) {
   }
 
   {
+    print('');
+    print('//   bonus material: code review of code generator');
     print('');
     print('//   bonus material: a pet peeve: ');
     print('//   philosophical observation: data hidden in class structures should be searchable');

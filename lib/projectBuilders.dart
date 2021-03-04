@@ -208,7 +208,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     if ( _immutable${e.name} == null
         //  test if the MutableReady fields have been changed
         //  note that the immutable() calls either are required for the result below
-        //  or are inexpensive, especially the second time.
+        //  or are inexpensive, especially the second time since they are idempotent.
     ''');
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
