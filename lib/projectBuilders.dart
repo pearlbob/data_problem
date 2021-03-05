@@ -1,12 +1,15 @@
-// ignore: import_of_legacy_library_into_null_safe
+//
 import 'package:build/build.dart';
 
-// ignore: import_of_legacy_library_into_null_safe
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 
 /*
+run a compile service locally:
+
 flutter pub run build_runner watch --delete-conflicting-outputs
- */
+
+*/
 
 class CodeBuilder implements Builder {
   @override
@@ -47,7 +50,7 @@ $sb
   //  a bit of dart stream magic
   Iterable<Element> allElements(LibraryElement element) sync* {
     for (var cu in element.units) {
-      yield* cu.functionTypeAliases;
+      yield* cu.typeAliases;
       yield* cu.functions;
       yield* cu.mixins;
       yield* cu.topLevelVariables;
@@ -57,7 +60,7 @@ $sb
 
   ///  generate the code for the immutable version of the data structure
   String _generateImmutableClass(LibraryElement entryLib, Element e) {
-    var fields = entryLib.getType(e.name).fields;
+    var fields = entryLib.getType(e.name ?? '')?.fields ?? [];
     var sb = StringBuffer();
 
     //  declare class and default constructor
@@ -85,7 +88,7 @@ class Immutable${e.name} {
       var isImmutable = _isImmutable(field);
       sb.writeln('  final '
           '${isImmutable ? '' : 'Immutable'}'
-          '${type.getDisplayString(withNullability: false)} ${field.name};');
+          '${type.getDisplayString(withNullability: true)} ${field.name};');
     }
 
     //  generate a toString() function for convenience
@@ -114,7 +117,7 @@ class Immutable${e.name} {
   //  generate the code for the mutable version of the data structure
   //  capable of generating the immutable version
   String _generateMutableClass(LibraryElement entryLib, Element e) {
-    var fields = entryLib.getType(e.name).fields;
+    var fields = entryLib.getType(e.name ?? '')?.fields ?? [];
     var sb = StringBuffer();
 
     //  find all the mutable classes referenced
@@ -148,9 +151,10 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     for (var field in fields) {
       var type = field.type;
       sb.writeln('''
-  ${type.getDisplayString(withNullability: false)} _${field.name};
-  ${type.getDisplayString(withNullability: false)} get ${field.name} => _${field.name};
-  set ${field.name}(${type.getDisplayString(withNullability: false)} value) {
+  //  boiler plate for ${field.name}
+  ${type.getDisplayString(withNullability: true)} _${field.name};
+  ${type.getDisplayString(withNullability: true)} get ${field.name} => _${field.name};
+  set ${field.name}(${type.getDisplayString(withNullability: true)} value) {
     if (_${field.name} == value) {
       return;
     }
@@ -167,11 +171,12 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   ''');
 
     //  provide references to immutable versions of mutable class references
-     if (mutableFields.isNotEmpty ){
-       sb.writeln('  // storage to monitor MutableReady fields');
-     }
-    for (var field in mutableFields) {
-      sb.writeln('  Immutable${field.type.getDisplayString(withNullability: false)}? _lastImmutable_${field.name};');
+    if (mutableFields.isNotEmpty) {
+      sb.writeln('  // storage to monitor MutableReady fields');
+
+      for (var field in mutableFields) {
+        sb.writeln('  Immutable${field.type.getDisplayString(withNullability: true)} _lastImmutable_${field.name};');
+      }
     }
     sb.write('''
 
@@ -212,14 +217,15 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     ''');
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('    || !identical(_lastImmutable_${field.name}, _${field.name}.immutable())');
+        sb.writeln('    || !identical(_lastImmutable_${field.name},'
+            ' _${field.name}${_isNullable(field)?'?':''}.immutable())');
       }
       sb.write('''      )
       {   
 ''');
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('      _lastImmutable_${field.name} = _${field.name}.immutable();');
+        sb.writeln('      _lastImmutable_${field.name} = _${field.name}${_isNullable(field)?'?':''}.immutable();');
       }
       sb.write('''
       _immutable${e.name} = Immutable${e.name}(''');
@@ -253,6 +259,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
 
     //  generate a toString() function for convenience
     sb.write('''
+    
   @override
   String toString() {
     return '\$runtimeType{''');
@@ -272,6 +279,10 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
 }
 ''');
     return sb.toString();
+  }
+
+  bool _isNullable(FieldElement field) {
+    return field.type.nullabilitySuffix == NullabilitySuffix.question;
   }
 
   /// test if the given field element is immutable

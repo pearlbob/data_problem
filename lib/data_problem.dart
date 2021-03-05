@@ -241,7 +241,7 @@ void main(List<String> arguments) {
 
   {
     print('');
-    print('//   speaking of compound values:');
+    print('//   now let\'s worry about compound values:');
     var bob = EffectiveMutablePerson('bob', 13, favoriteColor: SampleColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -253,7 +253,7 @@ void main(List<String> arguments) {
       //  note that the local variable favoriteColor is final!
       //  only means that the reference can't be changed... but the value can!
       if (favoriteColor != null) {
-        favoriteColor.red = 255;    //  this is bad, really bad
+        favoriteColor.red = 255; //  this is bad, really bad
         //  we're changing a value that we think is "final" because it's a final field
         //  referenced by a final variable
         favoriteColor.green = 255;
@@ -303,21 +303,25 @@ void main(List<String> arguments) {
     print('//   now immutable values are immutable, mutable values are mutable... almost');
     print('//   ...with a ton of nearly unreadable and unmaintainable boilerplate.');
     print('');
+  }
 
+  {
     print('//   Hey, this is all fine.  What can possibly be wrong now?');
     print('//   Yes it is a subtle bug, but it\'s dangerous since it\'s not obvious.');
-    bob.favoriteColor = MutableColor(0, 0, 255);
+    var bob = MutablePerson('bob', 13, favoriteColor: MutableColor(0, 0, 255));
     var history = <NearlyImmutablePerson>[];
     print('bob: $bob');
     history.add(bob.immutable()); //  [0]
 
     //  let's fool around with bob's color, using an external reference
-    print('//   Let\'s try fooling with a mutable field with an external reference... behind the back of the containing object!');
+    print(
+        '//   Let\'s try fooling with a mutable field with an external reference... behind the back of the containing object!');
     var favoriteColor = bob.favoriteColor; //  Person's immutable copy cleared here
     if (favoriteColor != null) {
       favoriteColor.red = 255;
       history.add(bob.immutable()); //  [1] bob's immutable value was set to purple
-      favoriteColor.green = 255; //  bob's immutable copy was not cleared here!  so bob's immutable value is still purple
+      favoriteColor.green =
+          255; //  bob's immutable copy was not cleared here!  so bob's immutable value copy is still purple
       history.add(bob.immutable()); //  [2]
     }
     bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
@@ -369,7 +373,7 @@ void main(List<String> arguments) {
       //Color? favoriteColor = immutableBob.favoriteColor;  //  A value of type 'ImmutableColor?' can't be assigned to a variable of type 'Color?'.
       var favoriteColor = bob.favoriteColor;
 
-      //  if (favoriteColor != null)  //  can never be null
+      if (favoriteColor != null)
       {
         favoriteColor.red = 255;
         history.add(bob.immutable()); //  [1]
@@ -460,8 +464,8 @@ class PersonWithGetters {
 class PersonWithFinalValues {
   const PersonWithFinalValues(this.name, this.luckyNumber);
 
-  final String name; //  final can only be initialized at construction
-  final int luckyNumber; //  final can only be initialized at construction
+  final String name;
+  final int luckyNumber;
 
   @override
   String toString() {
@@ -469,29 +473,29 @@ class PersonWithFinalValues {
   }
 }
 
-/// read or write through getters and setters
-/// typical dart style
-/// too much boilerplate!
-class PersonWithGettersAndSetters {
-  PersonWithGettersAndSetters(this._name, this._luckyNumber);
-
-  String _name;
-
-  set name(String value) => _name = value;
-
-  String get name => _name;
-
-  int _luckyNumber;
-
-  set luckyNumber(int value) => _luckyNumber = value;
-
-  int get luckyNumber => _luckyNumber;
-
-  @override
-  String toString() {
-    return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
-  }
-}
+// /// read or write through getters and setters
+// /// typical dart style
+// /// too much boilerplate!
+// class PersonWithGettersAndSetters {
+//   PersonWithGettersAndSetters(this._name, this._luckyNumber);
+//
+//   String _name;
+//
+//   set name(String value) => _name = value;
+//
+//   String get name => _name;
+//
+//   int _luckyNumber;
+//
+//   set luckyNumber(int value) => _luckyNumber = value;
+//
+//   int get luckyNumber => _luckyNumber;
+//
+//   @override
+//   String toString() {
+//     return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
+//   }
+// }
 
 /// let everyone have access to the member values
 class PersonWithCopy {
@@ -697,7 +701,8 @@ class MutableColor implements MutableReady<ImmutableColor> {
 /// just like AlmostImmutablePerson but with an immutable favorite color.
 @immutable
 class NearlyImmutablePerson {
-  const NearlyImmutablePerson(this.name, this.luckyNumber, {ImmutableColor? favoriteColor}) : favoriteColor = favoriteColor;
+  const NearlyImmutablePerson(this.name, this.luckyNumber, {ImmutableColor? favoriteColor})
+      : favoriteColor = favoriteColor;
 
   final String name;
   final int luckyNumber;

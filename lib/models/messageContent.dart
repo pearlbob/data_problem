@@ -10,6 +10,7 @@ class Color {
   int blue;
 }
 
+
 //  a person
 class Person {
   Person(this.name, this.luckyNumber, {this.favoriteColor});
