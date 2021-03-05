@@ -202,7 +202,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
           //  member has to be immutable or an implementation of MutableReady!
           sb.write(' _lastImmutable_${field.name}!');
         } else {
-          sb.write(' ${field.name}');
+          sb.write(' _${field.name}');
         }
       }
       sb.writeln('));');
@@ -242,7 +242,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
           //  member has to be immutable or an implementation of MutableReady!
           sb.write(' _lastImmutable_${field.name}!');
         } else {
-          sb.write(' ${field.name}');
+          sb.write(' _${field.name}');
         }
       }
       sb.writeln(');');
@@ -253,7 +253,6 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     }
 
     //  todo: implement equals, hashcode, compareTo<>
-    //  todo: deal with nullable fields
     //  todo: copy comments
     //  todo: copy class methods, const values, static methods, etc.
 

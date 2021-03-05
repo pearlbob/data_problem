@@ -142,7 +142,7 @@ void main(List<String> arguments) {
     //  add more bob history
     bob.luckyNumber = 3;
     print('bob: $bob');
-    history.add(bob); //  this should be a copy!
+    history.add(bob); //  fixme: this should be a copy!
     _printHistory(history);
     bob.luckyNumber = 123456;
     print('bob: $bob');
@@ -253,7 +253,7 @@ void main(List<String> arguments) {
       //  note that the local variable favoriteColor is final!
       //  only means that the reference can't be changed... but the value can!
       if (favoriteColor != null) {
-        favoriteColor.red = 255; //  this is bad, really bad
+        favoriteColor.red = 255; //  fixme: this is bad, really bad
         //  we're changing a value that we think is "final" because it's a final field
         //  referenced by a final variable
         favoriteColor.green = 255;
@@ -288,7 +288,6 @@ void main(List<String> arguments) {
     }
 
     //Color? favoriteColor = immutableBob.favoriteColor;  //  A value of type 'ImmutableColor?' can't be assigned to a variable of type 'Color?'.
-
     {
       //  now let's update a mutable value by an external reference!!!
       var favoriteColor = bob.favoriteColor;
@@ -316,12 +315,12 @@ void main(List<String> arguments) {
     //  let's fool around with bob's color, using an external reference
     print(
         '//   Let\'s try fooling with a mutable field with an external reference... behind the back of the containing object!');
-    var favoriteColor = bob.favoriteColor; //  Person's immutable copy cleared here
+    var favoriteColor = bob.favoriteColor; //  note: Person's immutable copy of Color was cleared here!
     if (favoriteColor != null) {
       favoriteColor.red = 255;
       history.add(bob.immutable()); //  [1] bob's immutable value was set to purple
-      favoriteColor.green =
-          255; //  bob's immutable copy was not cleared here!  so bob's immutable value copy is still purple
+      favoriteColor.green = 255; //  bob's immutable copy of Color was not cleared here!
+      //                            so bob's immutable value copy of Color is still purple
       history.add(bob.immutable()); //  [2]
     }
     bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
@@ -333,21 +332,13 @@ void main(List<String> arguments) {
   }
 
   print('');
-  print('//   more dart notes:');
-  print('//      constant values are deeply, transitively immutable.');
-  print('//      constant values can only be constructed from values constant at compile time.');
-  print('//      final values are not deeply, transitively immutable.');
-  print('//      collection classes have their own immutability issues');
-  print('//      efficient immutable copies of graphs is also difficult but can be efficient');
-
-  print('');
   print('//   dart, and nearly all languages i know of, are not really ready for immutable copies.');
   print('//   code generators are the only technology that i know of for this.');
 
   {
     print('');
     print('//   let\'s try the real solution, the generated code.');
-    print('//   sleepers wakeup, this is the real solution:');
+    //  todo: sleepers wakeup, this is the real solution
     var bob = Person('bob', 13, Color(0, 0, 255));
     var history = <ImmutablePerson>[];
     //compile error: history.add(bob); //error: The argument type 'Person' can't be assigned to the parameter type 'ImmutablePerson'.
@@ -373,11 +364,11 @@ void main(List<String> arguments) {
       //Color? favoriteColor = immutableBob.favoriteColor;  //  A value of type 'ImmutableColor?' can't be assigned to a variable of type 'Color?'.
       var favoriteColor = bob.favoriteColor;
 
-      if (favoriteColor != null)
-      {
+      if (favoriteColor != null) {
         favoriteColor.red = 255;
         history.add(bob.immutable()); //  [1]
-        favoriteColor.green = 255; //  bob's mutable ready color has monitored this update
+        favoriteColor.green = 255; //  bob's mutable ready mutable Color has monitored this update
+        //  todo: step into here
         history.add(bob.immutable()); //  [2], that triggers a new immutable here
       }
       print('bob favoriteColor: ${bob.favoriteColor}');
@@ -398,6 +389,17 @@ void main(List<String> arguments) {
     print('//   immutable objects act as expected.');
     print('');
   }
+
+  print('');
+  //  todo: pay big attention to this:
+  print('//   the big Dart takeaway:');
+  print('//      final values are not deeply, transitively immutable.');
+  print('');
+  print('//   more dart notes:');
+  print('//      constant values are deeply, transitively immutable.');
+  print('//      constant values can only be constructed from values constant at compile time.');
+  print('//      collection classes have their own immutability issues');
+  print('//      efficient immutable copies of graphs is also difficult but can be made efficient');
 
   {
     print('');
