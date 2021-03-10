@@ -178,7 +178,8 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       sb.writeln('  // storage to monitor MutableReady fields');
 
       for (var field in mutableFields) {
-        sb.writeln('  Immutable${field.type.getDisplayString(withNullability: true)} _lastImmutable_${field.name};');
+        sb.writeln('    Immutable${field.type.getDisplayString(withNullability: true)}${_isNullable(field)?'':'?'}'
+            ' _lastImmutable_${field.name};');
       }
     }
     sb.write('''

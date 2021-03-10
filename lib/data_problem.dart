@@ -183,6 +183,7 @@ void main(List<String> arguments) {
     print('identical(history[1], history[2]): ${identical(history[1], history[2])}');
     print(
         '//   thus a history of ten-thousand entries will generate ten-thousand ImmutablePerson copies for each of its records.');
+    print('//   this solution does not scale.');
     print('//   we need to be more effective with our use of memory!');
     print('');
   } catch (e) {
@@ -264,7 +265,8 @@ void main(List<String> arguments) {
       }
     }
     print('immutableBob: $immutableBob');
-    print('//   lesson: all referenced types need to know that they are immutable!');
+    print('//   i\'ve mutated the immutable!');
+    print('//   lesson: all referenced types need to know that they are immutable.');
     print('//   so they can defend themselves from change');
     print('//   String and int are immutable classes so we didn\'t have this problem with them');
     print('');

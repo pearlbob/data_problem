@@ -19,3 +19,22 @@ class Person {
   int luckyNumber;
   Color? favoriteColor;
 }
+
+
+class Address {
+  Address(this.addressLine1,this.addressLine2, this.city, this.mailCode, this.stateOrProvince);
+
+  String addressLine1;
+  String addressLine2;
+  String city;
+  String stateOrProvince;
+  String mailCode;
+}
+
+class Employee {
+  Employee(this.person, this.homeAddress, this.workAddress);
+
+  Person person;
+  Address homeAddress;
+  Address workAddress;
+}
