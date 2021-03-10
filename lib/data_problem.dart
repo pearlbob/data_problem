@@ -1,4 +1,7 @@
-// ignore: import_of_legacy_library_into_null_safe
+//
+//  sample immutable data problems
+//
+//
 import 'package:meta/meta.dart';
 
 import 'models/messageContent.g.dart';
@@ -241,6 +244,7 @@ void main(List<String> arguments) {
 
   {
     print('');
+    print('//   are we there yet?... no');
     print('//   now let\'s worry about compound values:');
     var bob = EffectiveMutablePerson('bob', 13, favoriteColor: SampleColor(0, 0, 255));
     var immutableBob = bob.immutable();
@@ -367,8 +371,8 @@ void main(List<String> arguments) {
       if (favoriteColor != null) {
         favoriteColor.red = 255;
         history.add(bob.immutable()); //  [1]
-        favoriteColor.green = 255; //  bob's mutable ready mutable Color has monitored this update
         //  todo: step into here
+        favoriteColor.green = 255; //  bob's mutable ready mutable Color has monitored this update
         history.add(bob.immutable()); //  [2], that triggers a new immutable here
       }
       print('bob favoriteColor: ${bob.favoriteColor}');
@@ -424,6 +428,8 @@ class PersonWithPublicValues {
   String name;
   int luckyNumber;
 
+  //  no favorite color yet!
+
   @override
   String toString() {
     //  dollar signs in strings are parsed for variable value substitution
@@ -455,6 +461,8 @@ class PersonWithGetters {
   // ignore: prefer_final_fields
   int _luckyNumber;
 
+  //  no favorite color yet!
+
   @override
   String toString() {
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
@@ -468,6 +476,8 @@ class PersonWithFinalValues {
 
   final String name;
   final int luckyNumber;
+
+  //  no favorite color yet!
 
   @override
   String toString() {
@@ -511,6 +521,8 @@ class PersonWithCopy {
   String name;
   int luckyNumber;
 
+  //  no favorite color yet!
+
   @override
   String toString() {
     return '$runtimeType{name: $name, luckyNumber: $luckyNumber}';
@@ -536,7 +548,6 @@ class SampleColor {
 @immutable
 // this annotation is only a start to the problem.
 // it enforces all fields need to be final
-// but does not prevent their modification from other references.
 class AlmostImmutablePerson {
   const AlmostImmutablePerson(this.name, this.luckyNumber, {SampleColor? favoriteColor})
       : favoriteColor = favoriteColor;
@@ -585,6 +596,7 @@ class EffectiveMutablePerson {
         (_immutablePerson = AlmostImmutablePerson(name, luckyNumber, favoriteColor: _favoriteColor));
   }
 
+  //  boiler plate for name
   String _name;
 
   String get name => _name;
@@ -599,6 +611,7 @@ class EffectiveMutablePerson {
     _immutablePerson = null; //  invalidate any existing immutable value
   }
 
+  //  boiler plate for lucky number
   int _luckyNumber;
 
   int get luckyNumber => _luckyNumber;
@@ -611,6 +624,7 @@ class EffectiveMutablePerson {
     _immutablePerson = null;
   }
 
+  //  boiler plate for favorite color
   SampleColor? _favoriteColor;
 
   SampleColor? get favoriteColor => _favoriteColor;
@@ -766,7 +780,7 @@ class MutablePerson implements MutableReady<NearlyImmutablePerson> {
     //  since we're giving away a reference to a mutable value
     //  our local immutable copy may not stay valid!
     //
-    //  note: this almost works.
+    //  note: this almost works...  but it is the wrong solution!!!
     //  if a reference is acquired and an immutable copy is made,
     //  subsequent alterations using that reference will not be monitored.
     //

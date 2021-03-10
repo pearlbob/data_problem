@@ -39,6 +39,8 @@ class CodeBuilder implements Builder {
     await buildStep.writeAsString(info, '''
 //  generated code
 //  do not change by hand!
+
+import 'package:meta/meta.dart';
 import '../mutableReady.dart';
 
 // Input ID: ${buildStep.inputId}
@@ -66,6 +68,7 @@ $sb
     //  declare class and default constructor
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
+@immutable
 class Immutable${e.name} {
   Immutable${e.name}(''');
 
@@ -255,6 +258,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  todo: implement equals, hashcode, compareTo<>
     //  todo: copy comments
     //  todo: copy class methods, const values, static methods, etc.
+    //  todo: constructors for mutable classes from immutable instances
 
     //  generate a toString() function for convenience
     sb.write('''
