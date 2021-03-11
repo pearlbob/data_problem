@@ -178,7 +178,9 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       sb.writeln('  // storage to monitor MutableReady fields');
 
       for (var field in mutableFields) {
-        sb.writeln('    Immutable${field.type.getDisplayString(withNullability: true)}${_isNullable(field)?'':'?'}'
+        sb.writeln('    Immutable${field.type.getDisplayString(withNullability: true)}'
+            //  make immutable copies nullable if they are not so naturally
+            '${_isNullable(field)?'':'?'}'
             ' _lastImmutable_${field.name};');
       }
     }
@@ -227,6 +229,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       sb.write('''      )
       {   
 ''');
+      //  update the immutable copies
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
         sb.writeln('      _lastImmutable_${field.name} = _${field.name}${_isNullable(field)?'?':''}.immutable();');
@@ -260,6 +263,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  todo: copy comments
     //  todo: copy class methods, const values, static methods, etc.
     //  todo: constructors for mutable classes from immutable instances
+    //  todo: deal with mutable class inheritance of mutable classes
 
     //  generate a toString() function for convenience
     sb.write('''

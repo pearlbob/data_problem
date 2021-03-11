@@ -275,8 +275,8 @@ void main(List<String> arguments) {
   {
     print('');
     print('//   speaking of compound values, let\'s try again:');
-    print('//   What?!!!!  What can possibly wrong if we have final references to immutable fields?');
     print('//   nested compound values can create a problem.');
+    print('//   What?!!!!  What can possibly wrong if we have final references to immutable fields?');
     var bob = MutablePerson('bob', 13, favoriteColor: MutableColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
