@@ -112,7 +112,36 @@ class Immutable${e.name} {
     }
     sb.writeln(''' }\';
   }
-}
+''');
+
+    //  generate a operator == function
+    sb.write('''
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)){
+      return true;  //  cheap, deep identical
+    }
+    if ( other.runtimeType != Immutable${e.name} ){
+      return false;  //  can never be == if the type is wrong
+    }
+    var o = other as Immutable${e.name};
+    return ''');
+    first = true;
+    for (var field in fields) {
+      if (first) {
+        first = false;
+      } else {
+        sb.write('\n      && ');
+      }
+      //  note: use private values!  not the accessors
+      //  otherwise you will null the immutable copy unintentionally
+      sb.write('${field.name} == o.${field.name}');
+    }
+    sb.write(''';
+  }
+''');
+
+    sb.write('''}
 ''');
     return sb.toString();
   }
@@ -259,12 +288,6 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
 ''');
     }
 
-    //  todo: implement equals, hashcode, compareTo<>
-    //  todo: copy comments
-    //  todo: copy class methods, const values, static methods, etc.
-    //  todo: constructors for mutable classes from immutable instances
-    //  todo: deal with mutable class inheritance of mutable classes
-
     //  generate a toString() function for convenience
     sb.write('''
     
@@ -282,8 +305,43 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       //  otherwise you will null the immutable copy unintentionally
       sb.write(' ${field.name}: \$_${field.name}');
     }
-    sb.writeln(''' }\';
+    sb.write('''  }\';
   }
+''');
+
+    //  generate a operator == function
+    sb.write('''
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)){
+      return true;  //  cheap, deep identical
+    }
+    if ( other.runtimeType != ${e.name} ){
+      return false;  //  can never be == if the type is wrong
+    }
+    var o = other as ${e.name};
+    return ''');
+    first = true;
+    for (var field in fields) {
+      if (first) {
+        first = false;
+      } else {
+        sb.write('\n      && ');
+      }
+      //  note: use private values!  not the accessors
+      //  otherwise you will null the immutable copy unintentionally
+      sb.write('_${field.name} == o._${field.name}');
+    }
+    sb.write(''';
+  }
+''');
+
+    //  todo: implement hashcode, compareTo<>
+    //  todo: copy comments
+    //  todo: copy class methods, const values, static methods, etc.
+    //  todo: constructors for mutable classes from immutable instances
+    //  todo: deal with mutable class inheritance of mutable classes
+    sb.writeln('''
 }
 ''');
     return sb.toString();
