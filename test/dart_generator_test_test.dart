@@ -73,7 +73,7 @@ void main() {
   test('immutable message lookup', () {
     {
       var p = Person('bob', 13, Color(0, 0, 255)).immutable();
-      for (var mv in p.messageValueLookup.messageVars) {
+      for (var mv in p.messageMemberLookup.messageMembers) {
         logger.i('${mv.type} ${mv.name} = ${mv.value()}');
       }
     }

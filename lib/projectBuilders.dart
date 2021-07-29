@@ -70,7 +70,7 @@ $sb
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
 @immutable
-class Immutable${e.name} implements MessageValue {
+class Immutable${e.name} implements MessageMembers {
   Immutable${e.name}(''');
 
     //  list all fields in the constructor
@@ -148,16 +148,20 @@ class Immutable${e.name} implements MessageValue {
     sb.write('''
 
   @override
-  MessageValueLookup get messageValueLookup => MessageValueLookup(SplayTreeSet()
-    ..addAll([
+  MessageMemberLookup get messageMemberLookup {
+    _messageMemberLookup ??= MessageMemberLookup([
 ''');
     //  fixme: deal with nullability
     for (var field in fields) {
-      sb.writeln('''       MessageVar('${field.name}', ${field.type.getDisplayString(withNullability: false)}, () {
+      sb.writeln('''       MessageMember('${field.name}', ${field.type.getDisplayString(withNullability: false)}, () {
          return ${field.name};
        }),''');
     }
-    sb.writeln('''      ]));
+    sb.write('''      ]);
+    return _messageMemberLookup!;
+    }
+
+    MessageMemberLookup? _messageMemberLookup;
 ''');
 
     sb.write('''}

@@ -10,16 +10,16 @@ abstract class MutableReady<T> {
   T immutable();
 }
 
-typedef DynamicValue = dynamic Function();
+typedef DynamicValueFunction = dynamic Function();
 
 
 /// Message variable
 @immutable
-class MessageVar implements Comparable<MessageVar> {
-  const MessageVar(this.name, this.type, this.value);
+class MessageMember implements Comparable<MessageMember> {
+  const MessageMember(this.name, this.type, this.value);
 
   @override
-  int compareTo(MessageVar other) {
+  int compareTo(MessageMember other) {
     var ret = name.compareTo(other.name);
     if (ret != 0) {
       return ret;
@@ -33,16 +33,16 @@ class MessageVar implements Comparable<MessageVar> {
 
   final String name;
   final Type type;
-  final DynamicValue value;
+  final DynamicValueFunction value;
 }
 
 /// lookup for message variables
-class MessageValueLookup {
-  MessageValueLookup(this.messageVars);
+class MessageMemberLookup {
+  MessageMemberLookup(this.messageMembers);
 
-  final SplayTreeSet<MessageVar> messageVars;
+  final List<MessageMember> messageMembers;
 }
 
-abstract class MessageValue {
-  MessageValueLookup get messageValueLookup;
+abstract class MessageMembers {
+  MessageMemberLookup get messageMemberLookup;
 }
