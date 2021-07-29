@@ -40,6 +40,7 @@ class CodeBuilder implements Builder {
 //  generated code
 //  do not change by hand!
 
+import 'dart:collection';
 import 'package:meta/meta.dart';
 import '../mutableReady.dart';
 
@@ -56,7 +57,7 @@ $sb
       yield* cu.functions;
       yield* cu.mixins;
       yield* cu.topLevelVariables;
-      yield* cu.types;
+      yield* cu.classes;
     }
   }
 
@@ -69,7 +70,7 @@ $sb
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
 @immutable
-class Immutable${e.name} {
+class Immutable${e.name} implements MessageValue {
   Immutable${e.name}(''');
 
     //  list all fields in the constructor
@@ -141,6 +142,22 @@ class Immutable${e.name} {
     }
     sb.write(''';
   }
+''');
+
+    //  generate the message value lookup
+    sb.write('''
+
+  @override
+  MessageValueLookup get messageValueLookup => MessageValueLookup(SplayTreeSet()
+    ..addAll([
+''');
+    //  fixme: deal with nullability
+    for (var field in fields) {
+      sb.writeln('''       MessageVar('${field.name}', ${field.type.getDisplayString(withNullability: false)}, () {
+         return ${field.name};
+       }),''');
+    }
+    sb.writeln('''      ]));
 ''');
 
     sb.write('''}
@@ -319,8 +336,8 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       return true;  //  cheap, deep identical
     }
     if ( o is! ${e.name} ){
-     if ( o is Immutable${e.name} ) {
-          return o == immutable();  //  compare the immutables   fixme: efficiency?
+      if ( o is Immutable${e.name} ) {
+         return o == immutable();  //  compare the immutables   fixme: efficiency?
       }
       return false;  //  can never be == if the type is wrong
     }

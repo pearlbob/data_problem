@@ -69,4 +69,13 @@ void main() {
       expect(im2.favoriteColor, bob2.favoriteColor);
     }
   });
+
+  test('immutable message lookup', () {
+    {
+      var p = Person('bob', 13, Color(0, 0, 255)).immutable();
+      for (var mv in p.messageValueLookup.messageVars) {
+        logger.i('${mv.type} ${mv.name} = ${mv.value()}');
+      }
+    }
+  });
 }
