@@ -40,7 +40,6 @@ class CodeBuilder implements Builder {
 //  generated code
 //  do not change by hand!
 
-import 'dart:collection';
 import 'package:meta/meta.dart';
 import '../mutableReady.dart';
 
@@ -70,7 +69,7 @@ $sb
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
 @immutable
-class Immutable${e.name} implements MessageMembers {
+class Immutable${e.name} implements ImmutableReady {
   Immutable${e.name}(''');
 
     //  list all fields in the constructor
@@ -86,6 +85,29 @@ class Immutable${e.name} implements MessageMembers {
     sb.writeln(');');
     sb.writeln();
 
+    /// simple promotion to mutable
+    //  declare class and default constructor
+    sb.write('''
+  ${e.name} toMutable() {
+    return ${e.name}(''');
+
+    //  list all fields in the constructor
+    first = true;
+    for (var field in fields) {
+      if (first) {
+        first = false;
+      } else {
+        sb.write(',\n    ');
+      }
+      var isImmutable = _isImmutable(field);
+      var nullable = _isNullable(field);
+      sb.write(isImmutable ? field.name : '${field.name}${nullable ? '?' : ''}.toMutable()');
+    }
+    sb.write(''');
+  }
+''');
+    sb.writeln();
+
     //  declare all the fields in the generated class
     for (var field in fields) {
       var type = field.type;
@@ -97,7 +119,7 @@ class Immutable${e.name} implements MessageMembers {
 
     //  generate a toString() function for convenience
     sb.write('''
- 
+
   @override
   String toString() {
     return '\$runtimeType{''');
@@ -117,14 +139,15 @@ class Immutable${e.name} implements MessageMembers {
 
     //  generate a operator == function
     sb.write('''
+
   @override
   bool operator ==(Object o) {
-    if (identical(this, o)){
-      return true;  //  cheap, deep identical
+    if (identical(this, o)) {
+      return true; //  cheap, deep identical
     }
-    if ( o is! Immutable${e.name} ){
-      if ( o is! ${e.name} ) {
-          return false;  //  can never be == if the type is wrong
+    if (o is! Immutable${e.name}) {
+      if (o is! ${e.name}) {
+        return false; //  can never be == if the type is wrong
       }
       o = o.immutable();
     }
@@ -144,24 +167,22 @@ class Immutable${e.name} implements MessageMembers {
   }
 ''');
 
-    //  generate the message value lookup
+    //  generate a hashCode function
     sb.write('''
 
   @override
-  MessageMemberLookup get messageMemberLookup {
-    _messageMemberLookup ??= MessageMemberLookup([
-''');
-    //  fixme: deal with nullability
+  int get hashCode => ''');
+    first = true;
     for (var field in fields) {
-      sb.writeln('''       MessageMember('${field.name}', ${field.type.getDisplayString(withNullability: false)}, () {
-         return ${field.name};
-       }),''');
+      if (first) {
+        first = false;
+      } else {
+        sb.write('\n      ^ ');
+      }
+      //  note: use private values!  not the accessors
+      sb.write('${field.name}.hashCode');
     }
-    sb.write('''      ]);
-    return _messageMemberLookup!;
-    }
-
-    MessageMemberLookup? _messageMemberLookup;
+    sb.write(''';
 ''');
 
     sb.write('''}
@@ -202,6 +223,30 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     sb.writeln(');');
     sb.writeln();
 
+    /// constructor from immutable
+    {
+      sb.write('''
+  ${e.name}.fromImmutable(Immutable${e.name} immutable${e.name})
+    : this(''');
+
+      //  list all the fields in the constructor
+      var first = true;
+      for (var field in fields) {
+        if (first) {
+          first = false;
+        } else {
+          sb.write(',\n    ');
+        }
+        var isImmutable = _isImmutable(field);
+        var isNullable = _isNullable(field);
+        sb.write(isImmutable
+            ? 'immutable${e.name}.${field.name}'
+            : 'immutable${e.name}.${field.name}${isNullable ? '?' : ''}.toMutable()');
+      }
+      sb.writeln(');');
+      sb.writeln();
+    }
+
     //  declare all the fields in the generated class
     for (var field in fields) {
       var type = field.type;
@@ -210,11 +255,10 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   ${type.getDisplayString(withNullability: true)} _${field.name};
   ${type.getDisplayString(withNullability: true)} get ${field.name} => _${field.name};
   set ${field.name}(${type.getDisplayString(withNullability: true)} value) {
-    if (_${field.name} == value) {
-      return;
+    if (_${field.name} != value) {
+      _${field.name} = value;
+      _immutable${e.name} = null;
     }
-    _${field.name} = value;
-    _immutable${e.name} = null;
   }
 ''');
     }
@@ -222,7 +266,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  adhere to the MutableReady interface by implementing the immutable()
     //  method.
     sb.writeln('''
-  Immutable${e.name}? _immutable${e.name};  //  last immutable copy made.
+  Immutable${e.name}? _immutable${e.name}; //  last immutable copy made.
   ''');
 
     //  provide references to immutable versions of mutable class references
@@ -230,9 +274,9 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       sb.writeln('  // storage to monitor MutableReady fields');
 
       for (var field in mutableFields) {
-        sb.writeln('    Immutable${field.type.getDisplayString(withNullability: true)}'
+        sb.writeln('  Immutable${field.type.getDisplayString(withNullability: true)}'
             //  make immutable copies nullable if they are not so naturally
-            '${_isNullable(field)?'':'?'}'
+            '${_isNullable(field) ? '' : '?'}'
             ' _lastImmutable_${field.name};');
       }
     }
@@ -268,15 +312,15 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     } else {
       //  mutableFields.isNotEmpty
       sb.write('''
-    if ( _immutable${e.name} == null
+    if (_immutable${e.name} == null
         //  test if the MutableReady fields have been changed
         //  note that the immutable() calls either are required for the result below
         //  or are inexpensive, especially the second time since they are idempotent.
-    ''');
+''');
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('    || !identical(_lastImmutable_${field.name},'
-            ' _${field.name}${_isNullable(field)?'?':''}.immutable())');
+        sb.writeln('      || !identical(_lastImmutable_${field.name},'
+            ' _${field.name}${_isNullable(field) ? '?' : ''}.immutable())');
       }
       sb.write('''      )
       {   
@@ -284,7 +328,9 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
       //  update the immutable copies
       for (var field in mutableFields) {
         //  member has to be immutable or an implementation of MutableReady!
-        sb.writeln('      _lastImmutable_${field.name} = _${field.name}${_isNullable(field)?'?':''}.immutable();');
+        sb.writeln('      _lastImmutable_${field.name} = _${field.name}${_isNullable(field)
+            ? '?'
+            : ''}.immutable();');
       }
       sb.write('''
       _immutable${e.name} = Immutable${e.name}(''');
@@ -293,15 +339,15 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
         if (first) {
           first = false;
         } else {
-          sb.write(',');
+          sb.write(', ');
         }
 
         //  provide the default constructor the correct argument list
         if (!_isImmutable(field)) {
           //  member has to be immutable or an implementation of MutableReady!
-          sb.write(' _lastImmutable_${field.name}!');
+          sb.write('_lastImmutable_${field.name}!');
         } else {
-          sb.write(' _${field.name}');
+          sb.write('_${field.name}');
         }
       }
       sb.writeln(');');
@@ -330,20 +376,21 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     }
     sb.write('''  }\';
   }
+  
 ''');
 
     //  generate a operator == function
     sb.write('''
   @override
   bool operator ==(Object o) {
-    if (identical(this, o)){
-      return true;  //  cheap, deep identical
+    if (identical(this, o)) {
+      return true; //  cheap, deep identical
     }
-    if ( o is! ${e.name} ){
-      if ( o is Immutable${e.name} ) {
-         return o == immutable();  //  compare the immutables   fixme: efficiency?
+    if (o is! ${e.name}) {
+      if (o is Immutable${e.name}) {
+        return o == immutable(); //  compare the immutables   fixme: efficiency?
       }
-      return false;  //  can never be == if the type is wrong
+      return false; //  can never be == if the type is wrong
     }
     return ''');
     first = true;
@@ -361,7 +408,25 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
   }
 ''');
 
-    //  todo: implement hashcode, compareTo<>
+    //  generate a hashCode function
+    sb.write('''
+
+  @override
+  int get hashCode => ''');
+    first = true;
+    for (var field in fields) {
+      if (first) {
+        first = false;
+      } else {
+        sb.write('\n      ^ ');
+      }
+      //  note: use private values!  not the accessors
+      sb.write('_${field.name}.hashCode');
+    }
+    sb.write(''';
+''');
+
+    //  todo: implement compareTo<>
     //  todo: copy comments
     //  todo: copy class methods, const values, static methods, etc.
     //  todo: constructors for mutable classes from immutable instances

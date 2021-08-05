@@ -1,3 +1,5 @@
+import 'dart:mirrors';
+
 import 'package:dart_generator_test/app_logger.dart';
 import 'package:dart_generator_test/models/messageContent.g.dart';
 import 'package:logger/logger.dart';
@@ -70,12 +72,39 @@ void main() {
     }
   });
 
-  test('immutable message lookup', () {
+  test('immutable mirror', () {
     {
-      var p = Person('bob', 13, Color(0, 0, 255)).immutable();
-      for (var mv in p.messageMemberLookup.messageMembers) {
-        logger.i('${mv.type} ${mv.name} = ${mv.value()}');
+      var p = Person('bob', 13, Color(0, 10, 255)).immutable();
+      var instanceMirror = reflect(p);
+      var entries = instanceMirror.type.declarations.entries;
+      for (var entry in entries) {
+        if (entry.value is VariableMirror) {
+          var name = MirrorSystem.getName(entry.value.simpleName);
+          logger.i('\'$name\': ${valueOfSymbol(p, entry.value.simpleName)}');
+        }
       }
+      expect(valueOf(p, 'name'), 'bob');
+      expect(valueOf(p, 'luckyNumber'), 13);
+      expect(valueOf(p, 'favoriteColor'), ImmutableColor(0, 10, 255));
+      var immutableColor = valueOf(p, 'favoriteColor') as ImmutableColor;
+      expect(immutableColor.red, 0);
+      expect(immutableColor.green, 10);
+      expect(immutableColor.blue, 255);
     }
   });
+}
+
+/// return the value of the named field in the given object
+dynamic valueOf(Object object, String name) {
+  return valueOfSymbol(object, MirrorSystem.getSymbol(name));
+}
+
+/// return the value of the symbol for the given object
+dynamic valueOfSymbol(Object object, Symbol symbol) {
+  var instanceMirror = reflect(object);
+  var dec = instanceMirror.type.declarations[symbol];
+  if (dec is VariableMirror) {
+    return instanceMirror.getField(dec.simpleName).reflectee;
+  }
+  return null;
 }
