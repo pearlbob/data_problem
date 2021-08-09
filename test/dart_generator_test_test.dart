@@ -2,6 +2,7 @@ import 'dart:mirrors';
 
 import 'package:dart_generator_test/app_logger.dart';
 import 'package:dart_generator_test/models/messageContent.g.dart';
+import 'package:dart_generator_test/mutableReady.dart';
 import 'package:logger/logger.dart';
 import 'package:test/test.dart';
 
@@ -92,6 +93,33 @@ void main() {
       expect(immutableColor.blue, 255);
     }
   });
+
+  test('basic message sink', () {
+    var p = Person('bob', 13, Color(0, 10, 255)).immutable();
+    var m = Message<ImmutablePerson>();
+    var sink = MessageTestSink(m);
+    var source = MessageTestSource(m);
+    source.test();
+  });
+}
+
+class MessageTestSource {
+  MessageTestSource(this._personMessage);
+
+  void test() {
+    _personMessage.source(Person('bob', 13, Color(0, 10, 255)).immutable());
+    _personMessage.source(Person('fred', 0, Color(255, 255, 255)).immutable());
+  }
+
+  final Message<ImmutablePerson> _personMessage;
+}
+
+class MessageTestSink {
+  MessageTestSink(Message<ImmutablePerson> personMessage) {
+    personMessage.registerSink((value) {
+      logger.i('MessageTestSink.person.sink($value)');
+    });
+  }
 }
 
 /// return the value of the named field in the given object

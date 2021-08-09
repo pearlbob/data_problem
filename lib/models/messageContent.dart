@@ -3,32 +3,24 @@
 
 /// a color class
 class Color {
-  Color(this.red, this.green, this.blue);  //  the default constructors are only here to make the file null-safe
-
-  int red;
-  int green;
-  int blue;
+  int red = 0; //  initial values only to make this file null-safe
+  int green = 0;
+  int blue = 0;
 }
-
 
 //  a person
 class Person {
-  Person(this.name, this.luckyNumber, {this.favoriteColor});
-
-  String name;
-  int luckyNumber;
+  String name = '';
+  int luckyNumber = 0;
   Color? favoriteColor;
 }
 
-
 class Address {
-  Address(this.addressLine1,this.addressLine2, this.city, this.mailCode, this.stateOrProvince);
-
-  String addressLine1;
-  String addressLine2;
-  String city;
-  String stateOrProvince;
-  String mailCode;
+  String addressLine1 = '';
+  String addressLine2 = '';
+  String city = '';
+  String stateOrProvince = '';
+  String mailCode = '';
 }
 
 class Employee {

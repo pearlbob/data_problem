@@ -69,7 +69,7 @@ $sb
     sb.write('''
 /// generated Immutable class for the ${e.name} class model
 @immutable
-class Immutable${e.name} implements ImmutableReady {
+class Immutable${e.name} implements ImmutableReady<${e.name}> {
   Immutable${e.name}(''');
 
     //  list all fields in the constructor
@@ -88,6 +88,7 @@ class Immutable${e.name} implements ImmutableReady {
     /// simple promotion to mutable
     //  declare class and default constructor
     sb.write('''
+  @override
   ${e.name} toMutable() {
     return ${e.name}(''');
 
@@ -139,7 +140,6 @@ class Immutable${e.name} implements ImmutableReady {
 
     //  generate a operator == function
     sb.write('''
-
   @override
   bool operator ==(Object o) {
     if (identical(this, o)) {
@@ -359,7 +359,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
 
     //  generate a toString() function for convenience
     sb.write('''
-    
+
   @override
   String toString() {
     return '\$runtimeType{''');
@@ -388,7 +388,7 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     }
     if (o is! ${e.name}) {
       if (o is Immutable${e.name}) {
-        return o == immutable(); //  compare the immutables   fixme: efficiency?
+        return o == immutable(); //  compare as immutables
       }
       return false; //  can never be == if the type is wrong
     }
@@ -429,7 +429,6 @@ class ${e.name} implements MutableReady<Immutable${e.name}> {
     //  todo: implement compareTo<>
     //  todo: copy comments
     //  todo: copy class methods, const values, static methods, etc.
-    //  todo: constructors for mutable classes from immutable instances
     //  todo: deal with mutable class inheritance of mutable classes
     sb.writeln('''
 }
