@@ -56,7 +56,7 @@ $sb
       yield* cu.functions;
       yield* cu.mixins;
       yield* cu.topLevelVariables;
-      yield* cu.classes;
+      yield* cu.types;
     }
   }
 

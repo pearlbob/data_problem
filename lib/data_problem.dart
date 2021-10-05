@@ -21,20 +21,22 @@ void _printHistory(List history) {
 void main(List<String> arguments) {
   // ignore: omit_local_variable_types
 
-//   print('''
-// a few dart notes:
-//    all Strings, numbers and boolean values in dart are immutable objects.
-//       typically it's only strings.
-//    final variables are not re-assignable.
-//    the "new" reserved word is optional on constructor invocation
-//    methods and fields are public unless the name begins with an underscore.
-//    this code is written using the new null-safety compiler.
-//      if you see odd uses of ?, ??, or !, ask me
-//    dart can infer the data type of local variables so the use of "var" is encouraged
-//    variables are public except when the name stars with an underscore
-//    single quotes and double quotes delineate strings
-//    three single quotes make a multi-line string.
-// ''');
+  print('''
+Spoiler: the big Dart takeaway:
+  
+  final values are not deeply, transitively immutable.
+  
+
+a few dart notes:
+   all Strings, numbers and boolean values in dart are immutable objects.
+   final variables are not re-assignable.
+   this code is written using the new null-safety compiler.
+     if you see odd uses of ?, ??, or !, ask me
+   dart can infer the data type of local variables so the use of "var" is encouraged
+   variables are public except when the name stars with an underscore
+   single quotes and double quotes delineate strings
+   three single quotes make a multi-line string.
+''');
 
   // try {
   //   // let everyone have access to the member values
