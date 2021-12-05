@@ -12,7 +12,7 @@ void _printHistory(List history) {
   print('history:');
   var i = 0;
   for (var e in history) {
-    print('   ${i++}: $e');
+    print('   ${i++}: ${e.toString().padRight(120)} (${identityHashCode(e)})');
   }
 }
 
@@ -26,9 +26,16 @@ Spoiler: the big Dart takeaway:
   
   final values are not deeply, transitively immutable.
   
+  note:
+    In the presentation, I will be going through a number of naive solutions to immutability. 
+    If I'm going too fast, ask me questions.   I will be trying to go fast.
+    If I've overlooked something, remember it for the questions at the end...
+        a number oversights are intentional for illustrative purposes.
+  
 
 a few dart notes:
    all Strings, numbers and boolean values in dart are immutable objects.
+   
    final variables are not re-assignable.
    this code is written using the new null-safety compiler.
      if you see odd uses of ?, ??, or !, ask me
@@ -90,23 +97,24 @@ a few dart notes:
   // } catch (e) {
   //   print(e);
   // }
-  //
-  // try {
-  //   print('');
-  //   //  one instance implies only one instance!
-  //   var history = <int>[]; //  an empty list of int
-  //   var luckyNumber = 13;
-  //   history.add(luckyNumber);
-  //   print('luckyNumber: $luckyNumber');
-  //   luckyNumber = 7;
-  //   history.add(luckyNumber);
-  //   print('luckyNumber: $luckyNumber');
-  //   _printHistory(history);
-  //   print('//  as expected');
-  //   print('//  note: in dart, numbers are immutable.');
-  // } catch (e) {
-  //   print(e);
-  // }
+
+  try {
+    print('');
+    //  one instance implies only one instance!
+    var history = <int>[]; //  an empty list of int
+    var luckyNumber = 13;
+    history.add(luckyNumber);
+    print('luckyNumber: $luckyNumber');
+    luckyNumber = 7;
+    history.add(luckyNumber);
+    print('luckyNumber: $luckyNumber');
+    _printHistory(history);
+    print('''//  as expected'
+//  note: in dart, numbers are immutable.
+''');
+  } catch (e) {
+    print(e);
+  }
 
   try {
     print('');
@@ -115,14 +123,14 @@ a few dart notes:
     var bob = PersonWithPublicValues('bob', 13);
     history.add(bob);
     print('bob: $bob');
-    bob.luckyNumber = 7;
+    bob.luckyNumber = 7; //  new lucky number
     history.add(bob);
     print('bob: $bob');
     _printHistory(history);
-    print('//  the history list did not work as intended.');
-    print('//  all lucky numbers are now 7!  this is true since there is only one "bob" instance.');
-    print('//  note: in dart, user declared classes are mutable.');
-    print('');
+    print('''//  the history list did not work as intended.
+//  all lucky numbers are now 7!  this is true since there is only one "bob" instance.
+//  note: in dart, user declared classes are mutable.
+''');
   } catch (e) {
     print(e);
   }
@@ -136,7 +144,7 @@ a few dart notes:
     var bob = PersonWithCopy('bob', 13);
     history.add(bob.copy());
     print('bob: $bob');
-    bob.luckyNumber = 7;
+    bob.luckyNumber = 7; //  new lucky number
     history.add(bob.copy());
     print('bob: $bob');
     _printHistory(history);
@@ -164,14 +172,16 @@ a few dart notes:
   }
 
   try {
-    print('');
-    print('//   force the user to generate ImmutablePerson copies for the history record.');
-    print('//   use the language type system to force the copy.');
+    print('''
+//   force the user to generate ImmutablePerson copies for the history record.
+//   use the language type system to force the copy.
+''');
     var history = <AlmostImmutablePerson>[]; //  an empty list
-    var bob = SimpleAlmostMutablePerson('bob', 13);
+    var bob = SimpleMutablePerson('bob', 13);
     //  compile error:
-    //  history.add(bob); //  error: The argument type 'SimpleAlmostMutablePerson'
+    //  history.add(bob); //  error: The argument type 'SimpleMutablePerson'
     //  can't be assigned to the parameter type 'AlmostImmutablePerson'.
+    //  This fixes the "I forgot to make a copy" error.
     history.add(bob.immutable());
     print('bob: $bob');
     bob.luckyNumber = 7;
@@ -179,15 +189,14 @@ a few dart notes:
     history.add(bob.immutable()); //  another history event
     print('bob: $bob');
     _printHistory(history);
-    print('//  history is now correct.');
-    print('//  the history list has an instance for each entry enforced by the dart type system');
-    print('//  unfortunately it\'s not very memory efficient.');
-    print('identical(history[1], history[2]): ${identical(history[1], history[2])}');
-    print(
-        '//   thus a history of ten-thousand entries will generate ten-thousand ImmutablePerson copies for each of its records.');
-    print('//   this solution does not scale.');
-    print('//   we need to be more effective with our use of memory!');
-    print('');
+    print('''//  history is now correct.'
+//  the history list has an instance for each entry enforced by the dart type system
+//  unfortunately it\'s not very memory efficient.
+identical(history[1], history[2]): ${identical(history[1], history[2])}
+//   thus a history of ten-thousand entries will generate ten-thousand ImmutablePerson copies for each of its records.
+//   this solution does not scale.
+//   we need to be more effective with our use of memory!
+''');
   } catch (e) {
     print(e);
   }
@@ -208,11 +217,11 @@ a few dart notes:
     history.add(bob.immutable()); //  the immutable was re-used.
     print('bob: $bob');
     _printHistory(history);
-    print('//  history is now correct.  the history list shares an instance for adjacent identical values.');
-    print('identical(history[1], history[2]): ${identical(history[1], history[2])}');
-    print('//  the immutable instance is only created when required');
-    print('//  note the tonnage of hand written boilerplate required!');
-    print('');
+    print('''//  history is now correct.  the history list shares an instance for adjacent identical values.
+// identical(history[1], history[2]): ${identical(history[1], history[2])}
+//  The immutable instance is only created when required.
+//  Note the tonnage of hand written boilerplate required!
+''');
   } catch (e) {
     print(e);
   }
@@ -246,9 +255,9 @@ a few dart notes:
   // }
 
   {
-    print('');
-    print('//   are we there yet?... no');
-    print('//   now let\'s worry about compound values:');
+    print('\n'
+        '//   are we there yet?... no\n'
+        '//   now let\'s worry about compound values:');
     var bob = EffectiveMutablePerson('bob', 13, favoriteColor: SampleColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -266,19 +275,22 @@ a few dart notes:
         favoriteColor.green = 255;
       }
     }
-    print('immutableBob: $immutableBob');
-    print('//   i\'ve mutated the immutable!');
-    print('//   lesson: all referenced types need to know that they are immutable.');
-    print('//   so they can defend themselves from change');
-    print('//   String and int are immutable classes so we didn\'t have this problem with them');
-    print('');
+    print('''// immutableBob: $immutableBob
+//   I\'ve mutated the immutable!
+//   Lesson: All referenced types need to know that they are immutable
+//   so they can defend themselves from change.
+//   String and int are immutable classes so we did not have this problem with them.
+''');
   }
 
   {
-    print('');
-    print('//   speaking of compound values, let\'s try again:');
-    print('//   nested compound values can create a problem.');
-    print('//   What?!!!!  What can possibly wrong if we have final references to immutable fields?');
+    print('''
+//  Speaking of compound values, let\'s try again:
+//  Nested compound values can create a problem.
+//  What?!!!!  What can possibly wrong if we have final references to immutable fields?
+//  The class NearlyImmutablePerson has the @immutable annotation as well!
+// 
+''');
     var bob = MutablePerson('bob', 13, favoriteColor: MutableColor(0, 0, 255));
     var immutableBob = bob.immutable();
     print('immutableBob: $immutableBob');
@@ -300,38 +312,41 @@ a few dart notes:
       //  now let's update a mutable value by an external reference!!!
       var favoriteColor = bob.favoriteColor;
       if (favoriteColor != null) {
-        favoriteColor.red = 255; //  bob's favorite color has been changed behind his back!
-        favoriteColor.green = 255;
+        favoriteColor.red = 255; //  bob's favorite color has been changed to purple behind his back!
       }
     }
 
-    print('bob: $bob');
-    print('bob.immutable() (a new immutable copy): ${bob.immutable()}');
+    print('bob: $bob   favorite color is now purple.');
+    print('bob.immutable() (a new immutable copy): ${bob.immutable()} shows purple');
     print('//   now immutable values are immutable, mutable values are mutable... almost');
-    print('//   ...with a ton of nearly unreadable and unmaintainable boilerplate.');
+    print('//   ...with a ton of hand written, nearly unreadable and unmaintainable boilerplate.');
     print('');
   }
 
   {
-    print('//   Hey, this is all fine.  What can possibly be wrong now?');
-    print('//   Yes it is a subtle bug, but it\'s dangerous since it\'s not obvious.');
+    print('''//   Hey, this is all fine.  What can possibly be wrong now?');
+//   Yes it is a subtle bug, but it\'s dangerous since it\'s not obvious.
+//  bob's favorite color is blue:''');
     var bob = MutablePerson('bob', 13, favoriteColor: MutableColor(0, 0, 255));
     var history = <NearlyImmutablePerson>[];
     print('bob: $bob');
     history.add(bob.immutable()); //  [0]
 
-    //  let's fool around with bob's color, using an external reference
-    print(
-        '//   Let\'s try fooling with a mutable field with an external reference... behind the back of the containing object!');
+    //  Now let's fool around with bob's color, using an external reference
+    print('''//   Let's try fooling with a mutable field with an external reference...
+//    ...behind the back of the containing object!
+''');
     var favoriteColor = bob.favoriteColor; //  note: Person's immutable copy of Color was cleared here!
     if (favoriteColor != null) {
       favoriteColor.red = 255;
       history.add(bob.immutable()); //  [1] bob's immutable value was set to purple
-      favoriteColor.green = 255; //  bob's immutable copy of Color was not cleared here!
+      //  bob's immutable copy has been set to purple
+      favoriteColor.green = 255; //  bob's cached immutable copy of Color was not cleared here!
       //                            so bob's immutable value copy of Color is still purple
+      //                            it should now be white.
       history.add(bob.immutable()); //  [2]
     }
-    bob.luckyNumber = 123456; //  the update of another value wakes up the color to the green change
+    bob.luckyNumber = 123456; //  the update of another value wakes up the immutable color to the green change
     history.add(bob.immutable()); //  [3]
     _printHistory(history);
     print('//   note that history[2] doesn\'t have the green value it should.');
@@ -385,37 +400,40 @@ a few dart notes:
     history.add(bob.immutable());
     history.add(bob.immutable());
 
-    print('bob.immutable() (a new immutable copy): ${bob.immutable()}');
-    print('immutableBob  (the old immutable copy): $immutableBob');
+    print('''bob.immutable() (a new immutable copy): ${bob.immutable()}
+immutableBob  (the old immutable copy): $immutableBob''');
     _printHistory(history);
-    print('//   note that history[2] now has the green value it should.');
-    print('//   now immutable values are immutable, mutable values are mutable');
-    print('//   changes from external references are accounted for');
-    print('//   copies are kept to a minimum:');
-    print('identical(history[3], history[4]): ${identical(history[3], history[4])}');
-    print('//   the boilerplate written by the generator, hidden from the developer');
-    print('//   immutable objects act as expected.');
-    print('');
+    print('''//   note that history[2] now has the green value it should.
+//   Now immutable values are immutable, mutable values are mutable.
+//   Changes from external references are accounted for.
+//   Copies are kept to a minimum:
+identical(history[3], history[4]): ${identical(history[3], history[4])}
+//   The boilerplate written by the generator, is hidden from the developer.
+//   Immutable objects act as expected.
+''');
   }
 
   print('');
   //  todo: pay big attention to this:
-  print('//   the big Dart takeaway:');
-  print('//      final values are not deeply, transitively immutable.');
-  print('');
-  print('//   more dart notes:');
-  print('//      constant values are deeply, transitively immutable.');
-  print('//      constant values can only be constructed from values constant at compile time.');
-  print('//      collection classes have their own immutability issues');
-  print('//      efficient immutable copies of graphs is also difficult but can be made efficient');
+  print('''//   the big Dart takeaway:
+
+      final values are not deeply, transitively immutable.
+
+//   more dart notes:
+//      constant values are deeply, transitively immutable.
+//      constant values can only be constructed from values constant at compile time.
+//      collection classes have their own immutability issues
+//      efficient immutable copies of graphs is also difficult but can be made efficient
+''');
 
   {
-    print('');
-    print('//   bonus material: code review of code generator');
-    print('');
-    print('//   bonus material: a pet peeve: ');
-    print('//   philosophical observation: data hidden in class structures should be searchable');
-    print('//   at least in a debug environment');
+    print('''
+//   bonus material: code review of code generator
+    
+//   bonus material: a pet peeve: 
+//   philosophical observation: data hidden in class structures should be searchable
+//   at least in a debug environment');
+''');
     print(database_declarations);
     print(database_use);
     print('');
@@ -569,14 +587,15 @@ class AlmostImmutablePerson {
 }
 
 /// a simple mutable version of Person
-class SimpleAlmostMutablePerson {
-  SimpleAlmostMutablePerson(this.name, this.luckyNumber, {this.favoriteColor});
+class SimpleMutablePerson {
+  SimpleMutablePerson(this.name, this.luckyNumber, {this.favoriteColor});
 
   AlmostImmutablePerson immutable() {
     //  a immutable copy is made at every call!
     return AlmostImmutablePerson(name, luckyNumber, favoriteColor: favoriteColor);
   }
 
+  //  mutable values
   String name;
   int luckyNumber;
   SampleColor? favoriteColor;
@@ -594,7 +613,7 @@ class EffectiveMutablePerson {
   EffectiveMutablePerson(this._name, this._luckyNumber, {SampleColor? favoriteColor}) : _favoriteColor = favoriteColor;
 
   AlmostImmutablePerson immutable() {
-    return _immutablePerson //  reuse an accurate immutable value
+    return _immutablePerson //  reuse an accurate, existing, immutable value
         ?? //  if the value above was null, do the following:
         //  generate a new immutable and save it for possible subsequent use
         (_immutablePerson = AlmostImmutablePerson(name, luckyNumber, favoriteColor: _favoriteColor));
@@ -781,11 +800,11 @@ class MutablePerson implements MutableReady<NearlyImmutablePerson> {
   }
 
   MutableColor? get favoriteColor {
-    //  since we're giving away a reference to a mutable value
+    //  Since we're giving away a reference to a mutable value
     //  our local immutable copy may not stay valid!
     //
-    //  note: this almost works...  but it is the wrong solution!!!
-    //  if a reference is acquired and an immutable copy is made,
+    //  Note: This almost works...  but it is the wrong solution!!!
+    //  If a reference is acquired and an immutable copy is made,
     //  subsequent alterations using that reference will not be monitored.
     //
     //  var c = bob.favoriteColor;    //  get a reference from the getter
